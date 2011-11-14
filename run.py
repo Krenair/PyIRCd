@@ -6,35 +6,38 @@ import signal
 import socket
 import sys
 
+oldexcepthook = sys.excepthook
+def newexcepthook(type, value, tb):
+    oldexcepthook(type, value, tb)
+    serverhandler.sigint(type)
+sys.excepthook = newexcepthook
+
+serverhandler = ServerHandler(Config("PyIRCd.conf"))
+
 def signal_handler(signal, frame):
     serverhandler.sigint("SIGINT received.")
-    run = False
+    serverhandler.run = False
     print ""
     sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 
-serverhandler = ServerHandler(Config("PyIRCd.conf"))
-
-oldexcepthook = sys.excepthook
-def newexcepthook(type, value, tb):
-    serverhandler.sigint(type)
-    oldexcepthook(type, value, tb)
-sys.excepthook = newexcepthook
-
 mainserversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 mainserversocket.bind((socket.gethostname(), 6667))
 mainserversocket.listen(1)
-serverhandler.serversockets.append(mainserversocket)
+serverhandler.addserversocket(mainserversocket)
 
-if len(serverhandler.serversockets) == 0:
+if serverhandler.serversockets == []:
     print "Not listening on any ports, quitting."
     sys.exit(0)
 
-run = True
-while run:
-    for stream in select.select(serverhandler.serversockets + serverhandler.remotesockets + [sys.stdin], [], [])[0]:
+while serverhandler.run:
+    s = select.select(serverhandler.selectlist, [], serverhandler.selectlist, 1) #1 as timeout so we can keep adding to the lists
+    for stream in s[0]: #reads
         if stream in serverhandler.serversockets: #server socket returned - this must mean that here is an incoming connection
             Thread(target=serverhandler.acceptconnection, args=[stream]).start()
-        else: #this must mean there is a line to be read and processed
-            Thread(target=serverhandler.processline, args=[stream]).start()
+        elif stream not in serverhandler.readingfromsockets: #this must mean there is a line to be read and processed
+            Thread(target=serverhandler.readline, args=[stream]).start()
+    
+    for stream in s[2]: #errors
+        Thread(target=serverhandler.clientdisconnected, args=[stream]).start()
 mainserversocket.close()
