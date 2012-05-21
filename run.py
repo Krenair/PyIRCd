@@ -8,16 +8,16 @@ import sys
 
 oldexcepthook = sys.excepthook
 def newexcepthook(type, value, tb):
-    oldexcepthook(type, value, tb)
     serverhandler.sigint(type)
+    oldexcepthook(type, value, tb)
 sys.excepthook = newexcepthook
 
 serverhandler = ServerHandler(Config("PyIRCd.conf"))
 
 def signal_handler(signal, frame):
+    print ''
     serverhandler.sigint("SIGINT received.")
     serverhandler.run = False
-    print ""
     sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 
