@@ -31,13 +31,13 @@ if serverhandler.serversockets == []:
     sys.exit(0)
 
 while serverhandler.run:
-    s = select.select(serverhandler.selectlist, [], serverhandler.selectlist, 1) #1 as timeout so we can keep adding to the lists
-    for stream in s[0]: #reads
-        if stream in serverhandler.serversockets: #server socket returned - this must mean that here is an incoming connection
+    s = select.select(serverhandler.selectlist, [], serverhandler.selectlist, 1) # 1 as timeout so we can keep adding to the lists.
+    for stream in s[0]: # Reads.
+        if stream in serverhandler.serversockets: # Server socket returned - this must mean that here is an incoming connection.
             Thread(target=serverhandler.acceptconnection, args=[stream]).start()
-        elif stream not in serverhandler.readingfromsockets: #this must mean there is a line to be read and processed
+        elif stream not in serverhandler.readingfromsockets: # This must mean there is a line to be read and processed.
             Thread(target=serverhandler.readline, args=[stream]).start()
     
-    for stream in s[2]: #errors
+    for stream in s[2]: # Errors.
         Thread(target=serverhandler.clientdisconnected, args=[stream]).start()
 mainserversocket.close()

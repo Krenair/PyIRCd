@@ -1,6 +1,7 @@
 import parser, sys
 
 class Config:
+    #TODO: Actually get stuff from a config file.
     def __init__(self, path):
         self.servername = "localhosttest"
         self.path = path
@@ -35,10 +36,10 @@ class ServerHandler:
         client.writeline(":" + self.config.servername + " NOTICE * :*** Found your hostname")
         #print self.remotesockets
     
-    def readline(self, stream): #input from a socket or console
-        if stream == sys.stdin: #console
+    def readline(self, stream): # Input from a socket or console.
+        if stream == sys.stdin: # Console.
             line = sys.stdin.readline()
-        else: #a socket
+        else: # A socket.
             self.readingfromsockets.append(stream)
             try:
                 line = ""
@@ -65,43 +66,42 @@ class ServerHandler:
                 client.sendNumeric("421", line.split(' ')[0] + " :Unknown command")
                 return
 
-            if client.loggedIn:
-                if l.type == parser.LineType.Nickname:
-                    client.nickname = l.nickname
-                elif l.type == parser.LineType.Username:
+            if l.type == parser.LineType.Nickname:
+                client.setNickname(l.nickname)
+                if client.username != None and not client.loggedIn:
+                    client.login()
+            elif l.type == parser.LineType.Username:
+                if client.loggedIn:
                     client.sendNumeric("462", ":You may not reregister")
-                elif l.type == parser.LineType.Join:
+                    return
+
+                client.username = l.username
+                client.realname = l.realname
+                if client.nickname != None:
+                    client.login()
+            elif l.type == parser.LineType.Join:
+                if not client.loggedIn:
                     client.sendNumeric("451", ":You have not registered")
-            else:
-                if l.type == parser.LineType.Nickname:
-                    client.nickname = l.nickname
-                    if client.username != None:
-                        client.login()
-                elif l.type == parser.LineType.Username:
-                    client.username = l.username
-                    client.realname = l.realname
-                    if client.nickname != None:
-                        client.login()
-                elif l.type == parser.LineType.Join:
-                    if 'keys' in l.getFields() and len(l.channels) != len(l.keys):
-                        pass # TODO: Error properly.
+                    return
 
-                    for index in range(0, len(l.channels)):
-                        channelName = l.channels[index].name
-                        if 'keys' in l.getFields():
-                            key = l.keys[index]
-                        else:
-                            key = None
+                if 'keys' in l.getFields() and len(l.channels) != len(l.keys):
+                    pass # TODO: Error properly.
 
-                        for existingChannel in self.channels:
-                            if existingChannel.name == channelName:
-                                existingChannel.tryJoin(client, key)
-                                break
+                for index in range(0, len(l.channels)):
+                    channelName = l.channels[index].name
+                    if 'keys' in l.getFields():
+                        key = l.keys[index]
+                    else:
+                        key = None
 
-                        # This channel doesn't exist already, create it.
-                        channel = Channel(channel, channelName, client, self)
-                        client.tryJoin(channel, None)
+                    for existingChannel in self.channels:
+                        if existingChannel.name == channelName:
+                            existingChannel.tryJoin(client, key)
+                            break
 
+                    # This channel doesn't exist already, create it.
+                    channel = Channel(channel, channelName, client, self)
+                    client.tryJoin(channel, None)
         elif stream == sys.stdin:
             print line
     
@@ -132,12 +132,16 @@ class Client:
         self.hostname = remotehost
         self.realname = None
         self.loggedIn = False
+        self.channels = []
     
     def __repr__(self):
         return self.remotehost + ":" + str(self.remoteport)
     
     def __str__(self):
-        return self.__repr__()
+        if self.nickname == None or self.username == None:
+            return repr(self)
+
+        return self.nickname + "!" + self.username + "@" + self.remotehost
 
     def writeline(self, line):
         self.socket.send(line + "\r\n")
@@ -156,12 +160,26 @@ class Client:
             self.sendNumeric("372", ":- " + line)
         self.sendNumeric("376", ":End of /MOTD command.")
 
+    def setNickname(self, newname):
+        clientsToBeNotified = [self]
+
+        for channel in self.channels:
+            for member in channel.members:
+                if member not in clientsToBeNotified:
+                    clientsToBeNotified.append(member)
+
+        for client in clientsToBeNotified:
+            client.writeline(":" + str(self) + " NICK :"+ newname)
+
+        self.nickname = newname
+
     def tryJoin(self, channel, key):
         if 'i' in channel.modes.keys() and self not in channel.userModes['i']:
             return False
         elif 'k' in channel.modes.keys() and key != channel.modes['k']:
             return False
         else:
+            self.channels.append(channel)
             channel.members.append(self)
             for channelMember in channel.members:
                 channelMember.writeline(":" + str(self) + " JOIN " + channel.name)
