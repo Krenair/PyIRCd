@@ -66,7 +66,9 @@ class ServerHandler:
                 client.sendNumeric("421", line.split(' ')[0] + " :Unknown command")
                 return
 
-            if l.type == parser.LineType.Nickname:
+            if l.type == parser.LineType.Ping:
+                commands.ping.run(client, l, self)
+            elif l.type == parser.LineType.Nickname:
                 commands.nick.run(client, l, self)
             elif l.type == parser.LineType.Username:
                 commands.user.run(client, l, self)

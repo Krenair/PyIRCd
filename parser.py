@@ -207,9 +207,9 @@ class Line:
             self.comment = self.readWord()
         elif firstword == "PING":
             self.type = LineType.Ping
-            self.server1 = self.readWord()
+            self.text = self.readWord()
             if self.isMoreToRead():
-                self.server2 = self.readWord()
+                self.server = self.readWord()
         elif firstword == "PONG":
             self.type = LineType.Pong
             self.daemon = self.readWord()
@@ -223,7 +223,7 @@ class Line:
             if self.isMoreToRead():
                 self.message = self.readWord()
         elif firstword == "REHASH":
-            self.type = LineType.ReHash
+            self.type = LineType.Rehash
         elif firstword == "RESTART":
             self.type = LineType.Restart
         elif firstword == "SUMMON":
