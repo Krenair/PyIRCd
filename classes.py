@@ -1,4 +1,4 @@
-import parser, sys
+import commands, parser, sys
 
 class Config:
     #TODO: Actually get stuff from a config file.
@@ -48,7 +48,7 @@ class ServerHandler:
                     if len(line) >= 2 and line[-2:] == "\r\n":
                         line = line[:-2]
                         break
-            except:
+            except Exception as e:
                 self.clientdisconnected(stream)
                 if stream in self.readingfromsockets:
                     self.readingfromsockets.remove(stream)
@@ -67,41 +67,11 @@ class ServerHandler:
                 return
 
             if l.type == parser.LineType.Nickname:
-                client.setNickname(l.nickname)
-                if client.username != None and not client.loggedIn:
-                    client.login()
+                commands.nick.run(client, l, self)
             elif l.type == parser.LineType.Username:
-                if client.loggedIn:
-                    client.sendNumeric("462", ":You may not reregister")
-                    return
-
-                client.username = l.username
-                client.realname = l.realname
-                if client.nickname != None:
-                    client.login()
+                commands.user.run(client, l, self)
             elif l.type == parser.LineType.Join:
-                if not client.loggedIn:
-                    client.sendNumeric("451", ":You have not registered")
-                    return
-
-                if 'keys' in l.getFields() and len(l.channels) != len(l.keys):
-                    pass # TODO: Error properly.
-
-                for index in range(0, len(l.channels)):
-                    channelName = l.channels[index].name
-                    if 'keys' in l.getFields():
-                        key = l.keys[index]
-                    else:
-                        key = None
-
-                    for existingChannel in self.channels:
-                        if existingChannel.name == channelName:
-                            existingChannel.tryJoin(client, key)
-                            break
-
-                    # This channel doesn't exist already, create it.
-                    channel = Channel(channel, channelName, client, self)
-                    client.tryJoin(channel, None)
+                commands.join.run(client, l, self)
         elif stream == sys.stdin:
             print line
     
@@ -138,7 +108,7 @@ class Client:
         return self.remotehost + ":" + str(self.remoteport)
     
     def __str__(self):
-        if self.nickname == None or self.username == None:
+        if self.nickname is None or self.username is None:
             return repr(self)
 
         return self.nickname + "!" + self.username + "@" + self.remotehost
@@ -201,6 +171,6 @@ class Channel:
             out += '+' + key + ' '
 
         for key, value in self.modes:
-            if value != None:
+            if value is not None:
                 out += value + ' '
         return out[:-1]
