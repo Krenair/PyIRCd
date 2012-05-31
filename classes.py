@@ -1,7 +1,8 @@
-import commands, parser, sys
+from parser import Line, LineType
+import commands, sys
 
 class Config:
-    #TODO: Actually get stuff from a config file.
+    # TODO: Actually get stuff from a config file.
     def __init__(self, path):
         self.servername = "localhosttest"
         self.path = path
@@ -61,19 +62,13 @@ class ServerHandler:
         if stream in self.clients:
             client = self.clients[stream]
             print "Line from", str(client) + ":", line
-            l = parser.Line(line)
-            if 'type' not in dir(l):
-                client.sendNumeric("421", line.split(' ')[0] + " :Unknown command")
+            l = Line(line)
+
+            if l.type not in commands.map.keys():
+                client.sendNumeric("421", l.type.upper() + " :Unknown command")
                 return
 
-            if l.type == parser.LineType.Ping:
-                commands.ping.run(client, l, self)
-            elif l.type == parser.LineType.Nickname:
-                commands.nick.run(client, l, self)
-            elif l.type == parser.LineType.Username:
-                commands.user.run(client, l, self)
-            elif l.type == parser.LineType.Join:
-                commands.join.run(client, l, self)
+            commands.map[l.type].run(client, l, self)
         elif stream == sys.stdin:
             print line
     
@@ -91,6 +86,11 @@ class ServerHandler:
     def addserversocket(self, serversocket):
         self.serversockets.append(serversocket)
         self.selectlist.append(serversocket)
+
+    def getchannel(self, name):
+        for channel in self.channels:
+            if channel.name == name:
+                return channel
 
 class Client:
     def __init__(self, socket, serversocket, remotehost, remoteport, serverhandler):
@@ -153,16 +153,32 @@ class Client:
         else:
             self.channels.append(channel)
             channel.members.append(self)
+            memberInfo = ''
             for channelMember in channel.members:
                 channelMember.writeline(":" + str(self) + " JOIN " + channel.name)
+
+                if channelMember in channel.userModes['o']:
+                    memberInfo += '@'
+                elif channelMember in channel.userModes['v']:
+                    memberInfo += '+'
+
+                memberInfo += channelMember.nickname + ' '
+
+            self.sendNumeric("353", "@ " + channel.name + " :" + memberInfo[:-1])
+            self.sendNumeric("366", channel.name + " :End of /NAMES list.")
+            if channel.topic is not None:
+                self.sendNumeric("332", line.channel + " :" + channel.topic)
+                self.sendNumeric("333", line.channel + " " + channel.topicLastChangedBy + " " + channel.topicLastChangedAt)
 
 class Channel:
     def __init__(self, name, owner, serverhandler):
         self.name = name
         self.owner = owner
-        self.topic = ''
+        self.topic = None
+        self.topicLastChangedBy = None
+        self.topicLastChangedAt = None
         self.modes = {}
-        self.userModes = {}
+        self.userModes = {'v':[], 'o':[owner]}
         self.members = []
         self.serverhandler = serverhandler
         serverhandler.channels.append(self)

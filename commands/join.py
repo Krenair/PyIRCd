@@ -12,7 +12,7 @@ def run(client, line, serverhandler):
         pass # TODO: Error properly.
 
     for index in range(0, len(line.channels)):
-        channelName = line.channels[index].name
+        channelName = line.channels[index]
         if 'keys' in line.getFields():
             key = line.keys[index]
         else:

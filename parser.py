@@ -46,8 +46,9 @@ class Line:
         self.offset = 0
         self.line = line
         firstword = self.readWord()
-        if firstword == "CAP": #TODO
+        if firstword == "CAP":
             self.type = LineType.Capabilities
+            self.capabilities = self.readToEnd()
         elif firstword == "PASS":
             self.type = LineType.Password
             self.password = self.readWord()
@@ -182,10 +183,8 @@ class Line:
             self.type = LineType.Who
             if self.isMoreToRead():
                 self.pattern = self.readWord()
-                if self.isMoreToRead():
-                    self.operatorsonly = True
-                else:
-                    self.operatorsonly = False
+                self.operatorsOnly = self.isMoreToRead()
+                self.readToEnd()
         elif firstword == "WHOIS":
             self.type = LineType.WhoIs
             word1 = self.readWord()
@@ -266,7 +265,7 @@ class Line:
             return False
         return True
 
-    def isChannelName(name):
+    def isChannelName(self, name):
         if name[0] == "#":
             return True
         else:

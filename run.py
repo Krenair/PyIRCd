@@ -1,18 +1,15 @@
-from classes import Config
-from classes import ServerHandler
+from classes import Config, ServerHandler
 from threading import Thread
-import select
-import signal
-import socket
-import sys
+from select import select
+import signal, socket, sys
+
+serverhandler = ServerHandler(Config("PyIRCd.conf"))
 
 oldexcepthook = sys.excepthook
 def newexcepthook(type, value, tb):
     serverhandler.sigint(type)
     oldexcepthook(type, value, tb)
 sys.excepthook = newexcepthook
-
-serverhandler = ServerHandler(Config("PyIRCd.conf"))
 
 def signal_handler(signal, frame):
     print ''
@@ -25,13 +22,15 @@ mainserversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 mainserversocket.bind((socket.gethostname(), 6667))
 mainserversocket.listen(1)
 serverhandler.addserversocket(mainserversocket)
+host, port = mainserversocket.getsockname()
+print "Listening on " + host + ":" + str(port)
 
-if serverhandler.serversockets == []:
+if len(serverhandler.serversockets) == 0:
     print "Not listening on any ports, quitting."
     sys.exit(0)
 
 while serverhandler.run:
-    s = select.select(serverhandler.selectlist, [], serverhandler.selectlist, 1) # 1 as timeout so we can keep adding to the lists.
+    s = select(serverhandler.selectlist, [], serverhandler.selectlist, 1) # 1 as timeout so we can keep adding to the lists.
     for stream in s[0]: # Reads.
         if stream in serverhandler.serversockets: # Server socket returned - this must mean that here is an incoming connection.
             Thread(target=serverhandler.acceptconnection, args=[stream]).start()
@@ -40,4 +39,3 @@ while serverhandler.run:
     
     for stream in s[2]: # Errors.
         Thread(target=serverhandler.clientdisconnected, args=[stream]).start()
-mainserversocket.close()
