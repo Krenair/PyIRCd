@@ -9,12 +9,15 @@ class Config:
 
 class ServerHandler:
     def __init__(self, config):
+        self.commandMap = commands.loadCommands()
         self.config = config
         self.serverSockets = []
         self.clients = {} # Socket -> client
         self.remoteSockets = []
         self.readingFromSockets = []
-        self.selectList = [sys.stdin]
+        self.selectList = []
+        if sys.platform != 'win32':
+            self.selectList.append(sys.stdin)
         self.channels = []
         self.run = True
 
@@ -63,11 +66,11 @@ class ServerHandler:
             print "Line from", str(client) + ":", line
             l = Line(line)
 
-            if l.firstWord not in commands.map.keys():
+            if l.firstWord not in self.commandMap.keys():
                 client.sendNumeric("421", l.firstWord + " :Unknown command")
                 return
 
-            commands.map[l.firstWord].run(client, l, self)
+            self.commandMap[l.firstWord].run(client, l, self)
         elif stream == sys.stdin:
             print line
     
@@ -280,15 +283,16 @@ class Client:
         self.sendNumeric("376", ":End of /MOTD command.")
 
     def setNickname(self, newname):
-        clientsToBeNotified = [self]
+        if self.loggedIn:
+            clientsToBeNotified = [self]
 
-        for channel in self.channels:
-            for member in channel.members:
-                if member not in clientsToBeNotified:
-                    clientsToBeNotified.append(member)
+            for channel in self.channels:
+                for member in channel.members:
+                    if member not in clientsToBeNotified:
+                        clientsToBeNotified.append(member)
 
-        for client in clientsToBeNotified:
-            client.writeLine(":" + str(self) + " NICK :"+ newname)
+            for client in clientsToBeNotified:
+                client.writeLine(":" + str(self) + " NICK :"+ newname)
 
         self.nickname = newname
 

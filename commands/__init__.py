@@ -1,19 +1,25 @@
-import join
-import mode
-import nick
-import part
-import ping
-import privmsg
-import topic
-import user
-import who
+def loadCommands():
+    import join
+    import mode
+    import msg
+    import nick
+    import part
+    import ping
+    import quit
+    import rehash
+    import topic
+    import user
+    import who
 
-map = {'JOIN': join,
-       'MODE': mode,
-       'NICK': nick,
-       'PART': part,
-       'PING': ping,
-       'PRIVMSG': privmsg,
-       'TOPIC': topic,
-       'USER': user,
-       'WHO': who}
+    return {'JOIN': join,
+            'MODE': mode,
+            'NICK': nick,
+            'NOTICE': msg,
+            'PART': part,
+            'PING': ping,
+            'PRIVMSG': msg,
+            'QUIT': quit,
+            'REHASH': rehash,
+            'TOPIC': topic,
+            'USER': user,
+            'WHO': who}

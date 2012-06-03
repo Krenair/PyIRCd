@@ -11,10 +11,10 @@ def run(client, line, serverhandler):
                 client.sendNumeric("404", receiver + " :Cannot send to channel")
             else:
                 for member in channel.members:
-                    member.writeLine(":" + str(client) + " PRIVMSG " + receiver + " :" + text)
+                    member.writeLine(":" + str(client) + " " + line.firstWord + " " + receiver + " :" + text)
         else:
             receiverClient = serverhandler.getClient(receiver)
             if receiverClient is None:
                 client.sendNumeric("401", receiver + " :No such nick/channel")
             else:
-                receiverClient.writeLine(":" + str(client) + " PRIVMSG " + receiver + " :" + text)
+                receiverClient.writeLine(":" + str(client) + " " + line.firstWord + " " + receiver + " :" + text)
