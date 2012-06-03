@@ -19,7 +19,7 @@ def run(client, line, serverhandler):
 
     for index in range(0, len(channels)):
         channelName = channels[index]
-        if 'keys' is None:
+        if keys is None:
             key = None
         else:
             key = keys[index]
