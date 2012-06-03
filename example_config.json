@@ -1,0 +1,10 @@
+{
+    "servername": "localhosttest",
+    "motdfile": "motd.txt",
+    "opers": {
+        "username": "password"
+    },
+    "operhosts": [
+        "host"
+    ]
+}

@@ -3,7 +3,7 @@ from threading import Thread
 from select import select
 import signal, socket, sys
 
-serverhandler = ServerHandler(Config("PyIRCd.conf"))
+serverhandler = ServerHandler(Config("config.json"))
 
 oldexcepthook = sys.excepthook
 def newexcepthook(type, value, tb):
@@ -25,7 +25,7 @@ serverhandler.addServerSocket(mainserversocket)
 host, port = mainserversocket.getsockname()
 print "Listening on " + host + ":" + str(port)
 
-if len(serverhandler.serverSockets) == 0:
+if len(serverhandler.serverSockets) < 1:
     print "Not listening on any ports, quitting."
     sys.exit(0)
 

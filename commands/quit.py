@@ -12,3 +12,5 @@ def run(client, line, serverhandler):
 
     for clientToNotify in clientsToNotify:
         clientToNotify.writeLine(str(client) + " QUIT :" + message)
+
+    serverhandler.clientDisconnected(client.socket)

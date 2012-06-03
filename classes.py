@@ -1,11 +1,14 @@
-import commands, sys
+import commands, json, sys
 
 class Config:
     # TODO: Actually get stuff from a config file.
     def __init__(self, path):
-        self.servername = "localhosttest"
         self.path = path
-        self.motd = "Just an example MOTD."
+        config = json.load(open(path))
+        self.servername = config['servername']
+        self.motd = open(config['motdfile']).read()
+        self.opers = config['opers']
+        self.operhosts = config['operhosts']
 
 class ServerHandler:
     def __init__(self, config):
@@ -118,12 +121,6 @@ class Line:
             self.servername = self.readWord()
             self.hopcount = self.readWord()
             self.info = self.readWord()
-        elif self.firstWord == "OPER":
-            self.username = self.readWord()
-            self.password = self.readWord()
-        elif self.firstWord == "QUIT":
-            if self.isMoreToRead():
-                self.quitmessage = self.readWord()
         elif self.firstWord == "SQUIT":
             self.server = self.readWord()
             self.comment = self.readWord()
@@ -176,9 +173,6 @@ class Line:
         elif self.firstWord == "INFO":
             if self.isMoreToRead():
                 self.server = self.readWord()
-        elif self.firstWord == "NOTICE":
-            self.receivers = self.readWord()
-            self.text = self.readToEnd()
         elif self.firstWord == "WHOIS":
             word1 = self.readWord()
             if self.isMoreToRead():
@@ -254,6 +248,7 @@ class Client:
         self.realname = None
         self.loggedIn = False
         self.channels = []
+        self.modes = []
     
     def __repr__(self):
         return self.remotehost + ":" + str(self.remoteport)
