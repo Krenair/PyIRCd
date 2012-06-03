@@ -1,6 +1,6 @@
 def run(client, line, serverhandler):
-    for channel in line.channels:
-        channel = serverhandler.getchannel(channel)
+    for channel in line.readWord().split(","):
+        channel = serverhandler.getChannel(channel)
         if channel is None:
             client.sendNumeric("403", channel.name + " :No such channel") #ERR_NOSUCHCHANNEL
         elif client not in channel.members:
@@ -9,4 +9,4 @@ def run(client, line, serverhandler):
             client.channels.remove(channel)
             channel.members.remove(client)
             for channelMember in channel.members:
-                channelMember.writeline(":" + str(client) + " PART " + channel.name)
+                channelMember.writeLine(":" + str(client) + " PART " + channel.name)

@@ -4,19 +4,25 @@ os.sys.path.insert(0, parentdir)
 import classes
 
 def run(client, line, serverhandler):
+    channels = line.readWord().split(",")
+    if line.isMoreToRead():
+        keys = line.readWord().split(",")
+    else:
+        keys = None
+
     if not client.loggedIn:
         client.sendNumeric("451", ":You have not registered")
         return
 
-    if 'keys' in line.getFields() and len(line.channels) != len(line.keys):
+    if keys is not None and len(channels) != len(keys):
         pass # TODO: Error properly.
 
-    for index in range(0, len(line.channels)):
-        channelName = line.channels[index]
-        if 'keys' in line.getFields():
-            key = line.keys[index]
-        else:
+    for index in range(0, len(channels)):
+        channelName = channels[index]
+        if 'keys' is None:
             key = None
+        else:
+            key = keys[index]
 
         for existingChannel in serverhandler.channels:
             if existingChannel.name == channelName:

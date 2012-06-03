@@ -1,2 +1,6 @@
 def run(client, line, serverhandler):
-    client.writeline(":" + serverhandler.config.servername + " PONG " + serverhandler.config.servername + " " + line.text)
+    text = line.readWord()
+    if line.isMoreToRead():
+        server = line.readWord()
+
+    client.writeLine(":" + serverhandler.config.servername + " PONG " + serverhandler.config.servername + " " + text)

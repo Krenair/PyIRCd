@@ -1,5 +1,11 @@
 def run(client, line, serverhandler):
-    channel = serverhandler.getchannel(line.pattern) #TODO: Make this support more than just channels.
+    if line.isMoreToRead():
+        pattern = line.readWord()
+
+    operatorsOnly = line.isMoreToRead()
+    line.readToEnd()
+
+    channel = serverhandler.getChannel(line.pattern) #TODO: Make this support more than just channels.
     if channel is None:
         return
 
