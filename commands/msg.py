@@ -1,3 +1,5 @@
+from numerics import ERR_NOSUCHNICK, ERR_CANNOTSENDTOCHAN
+
 def run(client, line, serverhandler):
     receivers = line.readWord().split(",")
     text = line.readToEnd()[1:]
@@ -6,15 +8,15 @@ def run(client, line, serverhandler):
         if serverhandler.isChannelName(receiver):
             channel = serverhandler.getChannel(receiver)
             if channel is None: # Channel doesn't exist.
-                client.sendNumeric("401", receiver + " :No such nick/channel")
+                client.sendNumeric(ERR_NOSUCHNICK, receiver)
             elif 'n' in channel.modes and client not in channel.members:
-                client.sendNumeric("404", receiver + " :Cannot send to channel")
+                client.sendNumeric(ERR_CANNOTSENDTOCHAN, receiver)
             else:
                 for member in channel.members:
                     member.writeLine(":" + str(client) + " " + line.firstWord + " " + receiver + " :" + text)
         else:
             receiverClient = serverhandler.getClient(receiver)
             if receiverClient is None:
-                client.sendNumeric("401", receiver + " :No such nick/channel")
+                client.sendNumeric(ERR_NOSUCHNICK, receiver)
             else:
                 receiverClient.writeLine(":" + str(client) + " " + line.firstWord + " " + receiver + " :" + text)

@@ -1,12 +1,14 @@
+from numerics import ERR_NOSUCHCHANNEL, ERR_NOTONCHANNEL
+
 def run(client, line, serverhandler):
     for channel in line.readWord().split(","):
         channel = serverhandler.getChannel(channel)
         if channel is None:
-            client.sendNumeric("403", channel.name + " :No such channel") #ERR_NOSUCHCHANNEL
+            client.sendNumeric(ERR_NOSUCHCHANNEL, channel.name)
         elif client not in channel.members:
-            client.sendNumeric("442", channel.name + " :You're not on that channel") #ERR_NOTONCHANNEL
+            client.sendNumeric(ERR_NOTONCHANNEL, channel.name)
         else:
-            client.channels.remove(channel)
-            channel.members.remove(client)
             for channelMember in channel.members:
                 channelMember.writeLine(":" + str(client) + " PART " + channel.name)
+            client.channels.remove(channel)
+            channel.members.remove(client)

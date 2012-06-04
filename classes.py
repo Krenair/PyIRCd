@@ -1,5 +1,7 @@
 import commands, json, sys
 
+from numerics import ERR_UNKNOWNCOMMAND, RPL_TOPICWHOTIME, RPL_MOTDSTART, RPL_MOTD, RPL_ENDOFMOTD, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_TOPIC, ERR_INVITEONLYCHAN, ERR_BADCHANNELKEY
+
 class Config:
     # TODO: Actually get stuff from a config file.
     def __init__(self, path):
@@ -70,7 +72,7 @@ class ServerHandler:
             l = Line(line)
 
             if l.firstWord not in self.commandMap.keys():
-                client.sendNumeric("421", l.firstWord + " :Unknown command")
+                client.sendNumeric(ERR_UNKNOWNCOMMAND, l.firstWord)
                 return
 
             self.commandMap[l.firstWord].run(client, l, self)
@@ -263,19 +265,19 @@ class Client:
         self.socket.send(line + "\r\n")
         print "Line to", str(self) + ":", line
 
-    def sendNumeric(self, number, message):
-        if self.nickname is not None:
-            self.writeLine(":" + self.serverhandler.config.servername + " " + number + " " + self.nickname + " " + message)
+    def sendNumeric(self, (number, format), *args):
+        if self.loggedIn:
+            self.writeLine(":" + self.serverhandler.config.servername + " " + number + " " + self.nickname + " " + (format % args))
 
     def login(self):
         self.loggedIn = True
         self.sendMOTD()
 
     def sendMOTD(self):
-        self.sendNumeric("375", ":- " + self.serverhandler.config.servername + " Message of the Day - ")
+        self.sendNumeric(RPL_MOTDSTART, self.serverhandler.config.servername)
         for line in self.serverhandler.config.motd.splitlines():
-            self.sendNumeric("372", ":- " + line)
-        self.sendNumeric("376", ":End of /MOTD command.")
+            self.sendNumeric(RPL_MOTD, line)
+        self.sendNumeric(RPL_ENDOFMOTD)
 
     def setNickname(self, newname):
         if self.loggedIn:
@@ -293,9 +295,9 @@ class Client:
 
     def tryJoin(self, channel, key):
         if 'i' in channel.modes.keys() and self not in channel.userModes['i']:
-            return False
+            self.sendNumeric(ERR_INVITEONLYCHAN, channel.name)
         elif 'k' in channel.modes.keys() and key != channel.modes['k']:
-            return False
+            self.sendNumeric(ERR_BADCHANNELKEY, channel.name)
         else:
             self.channels.append(channel)
             channel.members.append(self)
@@ -310,11 +312,12 @@ class Client:
 
                 memberInfo += channelMember.nickname + ' '
 
-            self.sendNumeric("353", "@ " + channel.name + " :" + memberInfo[:-1])
-            self.sendNumeric("366", channel.name + " :End of /NAMES list.")
+            self.sendNumeric(RPL_NAMREPLY, channel.name, memberInfo[:-1])
+            self.sendNumeric(RPL_ENDOFNAMES, channel.name)
             if channel.topic is not None:
-                self.sendNumeric("332", line.channel + " :" + channel.topic)
-                self.sendNumeric("333", line.channel + " " + channel.topicLastChangedBy + " " + channel.topicLastChangedAt)
+                self.sendNumeric(RPL_TOPIC, channel, channel.topic)
+                if channel.topicLastChangedAt is not None: # If it's not been changed before...
+                    self.sendNumeric(RPL_TOPICWHOTIME, channel.name, channel.topicLastChangedBy, channel.topicLastChangedAt)
 
 class Channel:
     def __init__(self, name, owner, serverhandler):

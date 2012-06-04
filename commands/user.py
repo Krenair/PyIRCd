@@ -1,3 +1,5 @@
+from numerics import ERR_ALREADYREGISTRED
+
 def run(client, line, serverhandler):
     username = line.readWord()
     hostname = line.readWord()
@@ -5,7 +7,7 @@ def run(client, line, serverhandler):
     realname = line.readWord()
 
     if client.loggedIn:
-        client.sendNumeric("462", ":You may not reregister")
+        client.sendNumeric(ERR_ALREADYREGISTRED)
         return
 
     client.username = username

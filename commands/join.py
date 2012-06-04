@@ -1,7 +1,5 @@
-import os
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.sys.path.insert(0, parentdir)
 import classes
+from numerics import ERR_NOTREGISTERED
 
 def run(client, line, serverhandler):
     channels = line.readWord().split(",")
@@ -11,7 +9,7 @@ def run(client, line, serverhandler):
         keys = None
 
     if not client.loggedIn:
-        client.sendNumeric("451", ":You have not registered")
+        client.sendNumeric(ERR_NOTREGISTERED)
         return
 
     if keys is not None and len(channels) != len(keys):
@@ -24,11 +22,10 @@ def run(client, line, serverhandler):
         else:
             key = keys[index]
 
-        for existingChannel in serverhandler.channels:
-            if existingChannel.name == channelName:
-                existingChannel.tryJoin(client, key)
-                break
-
-        # This channel doesn't exist already, create it.
-        channel = classes.Channel(channelName, client, serverhandler)
-        client.tryJoin(channel, None)
+        channel = serverhandler.getChannel(channelName)
+        if channel is None:
+            # This channel doesn't exist already, create it.
+            channel = classes.Channel(channelName, client, serverhandler)
+            client.tryJoin(channel, None)
+        else:
+            client.tryJoin(channel, key)

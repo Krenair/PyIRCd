@@ -1,3 +1,5 @@
+from numerics import ERR_NOSUCHCHANNEL, ERR_NOTONCHANNEL, ERR_CHANOPRIVSNEEDED, RPL_NOTOPIC, RPL_TOPIC, RPL_TOPICWHOTIME
+
 def run(client, line, serverhandler):
     channelName = line.readWord()
     if line.isMoreToRead():
@@ -7,19 +9,19 @@ def run(client, line, serverhandler):
 
     channel = serverhandler.getChannel(channelName)
     if channel is None:
-        client.sendNumeric("403", channelName + " :No such channel")
+        client.sendNumeric(ERR_NOSUCHCHANNEL, channelName)
     elif topic is not None:
         if client not in channel.members:
-            client.sendNumeric("442", channel.name + " :You're not on that channel")
+            client.sendNumeric(ERR_NOTONCHANNEL, channel.name)
         elif 't' in channel.modes and client not in channel.userModes['o']:
-            client.sendNumeric("482", channel.name + " :You're not a channel operator")
+            client.sendNumeric(ERR_CHANOPRIVSNEEDED, channel.name)
         else:
             channel.topic = topic
             for channelMember in channel.members:
                 channelMember.writeLine(":" + str(client) + " TOPIC " + channel.name + " :" + channel.topic)
     elif channel.topic is None:
-        client.sendNumeric("331", channel.name + " :No topic is set.")
+        client.sendNumeric(RPL_NOTOPIC, channel.name)
     else:
-        client.sendNumeric("332", channel.name + " :" + channel.topic)
+        client.sendNumeric(RPL_TOPIC, channel.name, channel.topic)
         if channel.topicLastChangedAt is not None: # If it's not been changed before...
-            client.sendNumeric("333", channel.name + " " + channel.topicLastChangedBy + " " + channel.topicLastChangedAt)
+            client.sendNumeric(RPL_TOPICWHOTIME, channel.name, channel.topicLastChangedBy, channel.topicLastChangedAt)
