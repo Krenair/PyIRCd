@@ -1,6 +1,7 @@
 def loadCommands():
     import away
     import join
+    import kick
     import mode
     import msg
     import nick
@@ -16,6 +17,7 @@ def loadCommands():
 
     return {'AWAY': away,
             'JOIN': join,
+            'KICK': kick,
             'MODE': mode,
             'NICK': nick,
             'NOTICE': msg,

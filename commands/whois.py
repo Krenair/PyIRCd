@@ -1,10 +1,11 @@
 from time import time
-from numerics import RPL_WHOISUSER, RPL_WHOISCHANNELS, RPL_WHOISSERVER, RPL_WHOISSECURE, RPL_AWAY, RPL_WHOISOPERATOR, RPL_WHOISIDLE, RPL_ENDOFWHOIS
+from numerics import ERR_NOSUCHNICK, RPL_WHOISUSER, RPL_WHOISCHANNELS, RPL_WHOISSERVER, RPL_WHOISSECURE, RPL_AWAY, RPL_WHOISOPERATOR, RPL_WHOISIDLE, RPL_ENDOFWHOIS
 
 def run(client, line, serverhandler):
-    for target in line.readWord().split(","):
-        target = serverhandler.getClient(target)
+    for targetName in line.readWord().split(","):
+        target = serverhandler.getClient(targetName)
         if target is None: # No such client.
+            client.sendNumeric(ERR_NOSUCHNICK, targetName)
             pass
         else:
             client.sendNumeric(RPL_WHOISUSER, target.nickname, target.username, serverhandler.config.servername, '*', target.realname)
