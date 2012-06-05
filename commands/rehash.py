@@ -1,4 +1,4 @@
-import __init__
+from __init__ import loadCommands
 from classes import Config
 
 def run(client, line, serverhandler):
@@ -6,4 +6,4 @@ def run(client, line, serverhandler):
     for module in serverhandler.commandMap.values():
         reload(module)
 
-    serverhandler.commandMap = __init__.loadCommands()
+    serverhandler.commandMap = loadCommands()

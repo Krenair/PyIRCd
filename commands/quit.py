@@ -9,6 +9,7 @@ def run(client, line, serverhandler):
         for member in channel.members:
             if member not in clientsToNotify:
                 clientsToNotify.append(member)
+        channel.memberLeave(client)
 
     for clientToNotify in clientsToNotify:
         clientToNotify.writeLine(str(client) + " QUIT :" + message)

@@ -1,7 +1,11 @@
+# The source for most of these names is RFC 1459, but 329 and 333 come from https://www.alien.net.au/irc/irc2numerics.html
+
 RPL_ENDOFWHO = "315", "%s :End of /WHO list"
+RPL_CHANNELMODEIS = "324", "%s %s"
+RPL_CREATIONTIME = "329", "%s %i"
 RPL_NOTOPIC = "331", "%s :No topic is set"
 RPL_TOPIC = "332", "%s :%s"
-RPL_TOPICWHOTIME = "333", "%s %s %s" # Name source: https://www.alien.net.au/irc/irc2numerics.html
+RPL_TOPICWHOTIME = "333", "%s %s %s"
 RPL_WHOREPLY = "352", "%s %s %s %s %s %s :%s %s"
 RPL_NAMREPLY = "353", "%s :%s"
 RPL_ENDOFNAMES = "366", "%s :End of /NAMES list"

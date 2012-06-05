@@ -1,12 +1,14 @@
-import commands, json, sys
-
+from commands import loadCommands
+from json import load as json_load
+from sys import platform, stdin
+from threading import Lock
+from time import time
 from numerics import ERR_UNKNOWNCOMMAND, RPL_TOPICWHOTIME, RPL_MOTDSTART, RPL_MOTD, RPL_ENDOFMOTD, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_TOPIC, ERR_INVITEONLYCHAN, ERR_BADCHANNELKEY
 
 class Config:
-    # TODO: Actually get stuff from a config file.
     def __init__(self, path):
         self.path = path
-        config = json.load(open(path))
+        config = json_load(open(path))
         self.servername = config['servername']
         self.motd = open(config['motdfile']).read()
         self.opers = config['opers']
@@ -14,17 +16,18 @@ class Config:
 
 class ServerHandler:
     def __init__(self, config):
-        self.commandMap = commands.loadCommands()
+        self.commandMap = loadCommands()
         self.config = config
         self.serverSockets = []
         self.clients = {} # Socket -> client
         self.remoteSockets = []
         self.readingFromSockets = []
         self.selectList = []
-        if sys.platform != 'win32':
-            self.selectList.append(sys.stdin)
+        if platform != 'win32':
+            self.selectList.append(stdin)
         self.channels = []
         self.run = True
+        self.outputLock = Lock()
 
     def sigint(self, message):
         for socket in self.clients:
@@ -44,8 +47,8 @@ class ServerHandler:
         client.writeLine(":" + self.config.servername + " NOTICE * :*** Found your hostname")
 
     def readLine(self, stream): # Input from a socket or console.
-        if stream == sys.stdin: # Console.
-            line = sys.stdin.readline()
+        if stream == stdin: # Console.
+            line = stdin.readline()
         else: # A socket.
             try:
                 line = ""
@@ -68,7 +71,9 @@ class ServerHandler:
     def processLine(self, stream, line):
         if stream in self.clients:
             client = self.clients[stream]
+            self.outputLock.acquire()
             print "Line from", str(client) + ":", line
+            self.outputLock.release()
             l = Line(line)
 
             if l.firstWord not in self.commandMap.keys():
@@ -76,7 +81,7 @@ class ServerHandler:
                 return
 
             self.commandMap[l.firstWord].run(client, l, self)
-        elif stream == sys.stdin:
+        elif stream == stdin:
             print line
     
     def clientDisconnected(self, socket):
@@ -106,7 +111,7 @@ class ServerHandler:
 
     def isChannelName(self, name):
         """Tries to determine if something is a valid channel name or not."""
-        if len(name) == 0:
+        if len(name) < 1:
             return False
         return name[0] == "#"
 
@@ -263,7 +268,9 @@ class Client:
 
     def writeLine(self, line):
         self.socket.send(line + "\r\n")
+        self.serverhandler.outputLock.acquire()
         print "Line to", str(self) + ":", line
+        self.serverhandler.outputLock.release()
 
     def sendNumeric(self, (number, format), *args):
         if self.loggedIn:
@@ -294,9 +301,9 @@ class Client:
         self.nickname = newname
 
     def tryJoin(self, channel, key):
-        if 'i' in channel.modes.keys() and self not in channel.userModes['i']:
+        if 'i' in channel.modes and self not in channel.userModes['i']:
             self.sendNumeric(ERR_INVITEONLYCHAN, channel.name)
-        elif 'k' in channel.modes.keys() and key != channel.modes['k']:
+        elif 'k' in channel.modes and key != channel.modes['k']:
             self.sendNumeric(ERR_BADCHANNELKEY, channel.name)
         else:
             self.channels.append(channel)
@@ -312,7 +319,7 @@ class Client:
 
                 memberInfo += channelMember.nickname + ' '
 
-            self.sendNumeric(RPL_NAMREPLY, channel.name, memberInfo[:-1])
+            self.sendNumeric(RPL_NAMREPLY, " = " + channel.name, memberInfo[:-1])
             self.sendNumeric(RPL_ENDOFNAMES, channel.name)
             if channel.topic is not None:
                 self.sendNumeric(RPL_TOPIC, channel, channel.topic)
@@ -330,6 +337,7 @@ class Channel:
         self.userModes = {'v':[], 'h':[], 'o':[owner], 'a':[]}
         self.members = []
         self.serverhandler = serverhandler
+        self.creationTime = int(time())
         serverhandler.channels.append(self)
 
     def getMode(self):
@@ -341,6 +349,15 @@ class Channel:
             if value is not None:
                 out += value + ' '
         return out[:-1]
+
+    def memberLeave(self, member):
+        self.members.remove(member)
+        for modeGroup in self.userModes.values():
+            if member in modeGroup:
+                modeGroup.remove(member)
+
+        if len(self.members) < 1:
+            self.serverhandler.channels.remove(self)
 
 class ModeChange:
     def __init__(self, to, by, mode, given, nick = None):

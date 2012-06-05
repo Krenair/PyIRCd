@@ -1,4 +1,4 @@
-import classes
+from classes import Channel
 from numerics import ERR_NOTREGISTERED
 
 def run(client, line, serverhandler):
@@ -25,7 +25,7 @@ def run(client, line, serverhandler):
         channel = serverhandler.getChannel(channelName)
         if channel is None:
             # This channel doesn't exist already, create it.
-            channel = classes.Channel(channelName, client, serverhandler)
+            channel = Channel(channelName, client, serverhandler)
             client.tryJoin(channel, None)
         else:
             client.tryJoin(channel, key)
