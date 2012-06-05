@@ -4,14 +4,4 @@ def run(client, line, serverhandler):
     else:
         message = "Client quit"
 
-    clientsToNotify = []
-    for channel in client.channels:
-        for member in channel.members:
-            if member not in clientsToNotify:
-                clientsToNotify.append(member)
-        channel.memberLeave(client)
-
-    for clientToNotify in clientsToNotify:
-        clientToNotify.writeLine(str(client) + " QUIT :" + message)
-
-    serverhandler.clientDisconnected(client.socket)
+    serverhandler.socketDisconnected(client.socket, message)

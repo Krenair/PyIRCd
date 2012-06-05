@@ -41,4 +41,4 @@ while serverhandler.run:
             Thread(target=serverhandler.readLine, args=[stream]).start()
     
     for stream in s[2]: # Errors.
-        Thread(target=serverhandler.clientDisconnected, args=[stream]).start()
+        Thread(target=serverhandler.socketDisconnected, args=[stream]).start()

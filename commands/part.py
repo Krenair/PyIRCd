@@ -11,4 +11,4 @@ def run(client, line, serverhandler):
             for channelMember in channel.members:
                 channelMember.writeLine(":" + str(client) + " PART " + channel.name)
             client.channels.remove(channel)
-            channel.members.remove(client)
+            channel.memberLeave(client)

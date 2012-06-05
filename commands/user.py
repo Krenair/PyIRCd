@@ -4,7 +4,7 @@ def run(client, line, serverhandler):
     username = line.readWord()
     hostname = line.readWord()
     servername = line.readWord()
-    realname = line.readWord()
+    realname = line.readWord()[1:]
 
     if client.loggedIn:
         client.sendNumeric(ERR_ALREADYREGISTRED)

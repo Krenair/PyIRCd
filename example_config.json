@@ -1,5 +1,6 @@
 {
     "servername": "localhosttest",
+    "serverinfo": "Test server"
     "motdfile": "motd.txt",
     "opers": {
         "username": "password"

@@ -1,4 +1,4 @@
-from numerics import ERR_NOSUCHNICK, ERR_CANNOTSENDTOCHAN
+from numerics import ERR_NOSUCHNICK, ERR_CANNOTSENDTOCHAN, RPL_AWAY
 
 def run(client, line, serverhandler):
     receivers = line.readWord().split(",")
@@ -19,4 +19,7 @@ def run(client, line, serverhandler):
             if receiverClient is None:
                 client.sendNumeric(ERR_NOSUCHNICK, receiver)
             else:
+                if receiverClient.awayMessage is not None:
+                    client.sendNumeric(RPL_AWAY, receiverClient.nickname, receiverClient.awayMessage)
+
                 receiverClient.writeLine(":" + str(client) + " " + line.firstWord + " " + receiver + " :" + text)

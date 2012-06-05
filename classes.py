@@ -10,6 +10,7 @@ class Config:
         self.path = path
         config = json_load(open(path))
         self.servername = config['servername']
+        self.serverinfo = config['serverinfo']
         self.motd = open(config['motdfile']).read()
         self.opers = config['opers']
         self.operhosts = config['operhosts']
@@ -32,7 +33,7 @@ class ServerHandler:
     def sigint(self, message):
         for socket in self.clients:
             self.clients[socket].writeLine("ERROR :Closing link: " + str(self.clients[socket]) + " (Server shutdown: " + message + ")")
-            self.clientDisconnected(socket)
+            self.socketDisconnected(socket, "Server shutdown: " + message)
         for serversocket in self.serverSockets:
             serversocket.close()
     
@@ -58,13 +59,11 @@ class ServerHandler:
                         line = line[:-2]
                         break
             except Exception as e:
-                self.clientDisconnected(stream)
-                if stream in self.readingFromSockets:
-                    self.readingFromSockets.remove(stream)
+                self.socketDisconnected(stream, "Read error")
                 return
 
-        if stream in self.readingFromSockets:
-            self.readingFromSockets.remove(stream)
+            if stream in self.readingFromSockets:
+                self.readingFromSockets.remove(stream)
 
         self.processLine(stream, line)
     
@@ -76,6 +75,9 @@ class ServerHandler:
             self.outputLock.release()
             l = Line(line)
 
+            if l.firstWord not in ['PING', 'PONG']:
+                client.lastActiveTime = int(time())
+
             if l.firstWord not in self.commandMap.keys():
                 client.sendNumeric(ERR_UNKNOWNCOMMAND, l.firstWord)
                 return
@@ -84,14 +86,26 @@ class ServerHandler:
         elif stream == stdin:
             print line
     
-    def clientDisconnected(self, socket):
+    def socketDisconnected(self, socket, message = None):
+        if socket in self.clients.keys():
+            client = self.clients[socket]
+            clientsToNotify = []
+            for channel in client.channels:
+                for member in channel.members:
+                    if member not in clientsToNotify:
+                        clientsToNotify.append(member)
+                channel.memberLeave(client)
+
+            for clientToNotify in clientsToNotify:
+                clientToNotify.writeLine(str(client) + " QUIT :" + message)
+
         if socket in self.selectList:
             self.selectList.remove(socket)
         if socket in self.remoteSockets:
             self.remoteSockets.remove(socket)
         if socket in self.readingFromSockets:
             self.readingFromSockets.remove(socket)
-        if socket in self.clients.values():
+        if socket in self.clients.keys():
             del self.clients[socket]
         socket.close()
     
@@ -180,13 +194,6 @@ class Line:
         elif self.firstWord == "INFO":
             if self.isMoreToRead():
                 self.server = self.readWord()
-        elif self.firstWord == "WHOIS":
-            word1 = self.readWord()
-            if self.isMoreToRead():
-                self.server = word1
-                self.nickmasks = self.readWord()
-            else:
-                self.nickmasks = word1
         elif self.firstWord == "WHOWAS":
             self.nickname = self.readWord()
             if self.isMoreToRead():
@@ -202,9 +209,6 @@ class Line:
                 self.daemon2 = self.readWord()
         elif self.firstWord == "ERROR":
             self.errormessage = self.readWord()
-        elif self.firstWord == "AWAY":
-            if self.isMoreToRead():
-                self.message = self.readWord()
         elif self.firstWord == "SUMMON":
             self.user = self.readWord()
             if self.isMoreToRead():
@@ -256,6 +260,10 @@ class Client:
         self.loggedIn = False
         self.channels = []
         self.modes = []
+        self.signOnTime = int(time())
+        self.lastActiveTime = int(time())
+        self.awayMessage = None
+        self.securelyConnected = False
     
     def __repr__(self):
         return self.remotehost + ":" + str(self.remoteport)

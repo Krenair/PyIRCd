@@ -1,6 +1,15 @@
-# The source for most of these names is RFC 1459, but 329 and 333 come from https://www.alien.net.au/irc/irc2numerics.html
+# The source for most of these names is RFC 1459, but 329, 333, 671 come from https://www.alien.net.au/irc/irc2numerics.html
 
+RPL_AWAY = "301", "%s :%s"
+RPL_UNAWAY = "305", ":You are no longer marked as being away"
+RPL_NOWAWAY = "306", ":You have been marked as being away"
+RPL_WHOISUSER = "311", "%s %s %s %s :%s"
+RPL_WHOISSERVER = "312", "%s %s :%s"
+RPL_WHOISOPERATOR = "313", "%s :is an IRC operator"
 RPL_ENDOFWHO = "315", "%s :End of /WHO list"
+RPL_WHOISIDLE = "317", "%s %i %i :seconds idle, signon time"
+RPL_ENDOFWHOIS = "318", "%s :End of /WHOIS list"
+RPL_WHOISCHANNELS = "319", "%s :%s"
 RPL_CHANNELMODEIS = "324", "%s %s"
 RPL_CREATIONTIME = "329", "%s %i"
 RPL_NOTOPIC = "331", "%s :No topic is set"
@@ -25,3 +34,4 @@ ERR_INVITEONLYCHAN = "473", "%s :Cannot join channel (+i)"
 ERR_BADCHANNELKEY = "475", "%s :Cannot join channel (+k)"
 ERR_CHANOPRIVSNEEDED = "482", "%s :You're not channel operator"
 ERR_NOOPERHOST = "491", ":No O-lines for your host"
+RPL_WHOISSECURE = "671", "%s :is using a secure connection"

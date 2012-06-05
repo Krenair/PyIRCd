@@ -1,4 +1,5 @@
 def loadCommands():
+    import away
     import join
     import mode
     import msg
@@ -11,8 +12,10 @@ def loadCommands():
     import topic
     import user
     import who
+    import whois
 
-    return {'JOIN': join,
+    return {'AWAY': away,
+            'JOIN': join,
             'MODE': mode,
             'NICK': nick,
             'NOTICE': msg,
@@ -24,4 +27,5 @@ def loadCommands():
             'REHASH': rehash,
             'TOPIC': topic,
             'USER': user,
-            'WHO': who}
+            'WHO': who,
+            'WHOIS': whois}
