@@ -32,9 +32,10 @@ class ServerHandler:
         self.outputLock = Lock()
 
     def sigint(self, message):
-        for socket in self.clients:
-            self.clients[socket].writeLine("ERROR :Closing link: " + str(self.clients[socket]) + " (Server shutdown: " + message + ")")
+        for socket, client in dict(self.clients):
+            client.writeLine("ERROR :Closing link: " + self.clients[socket].hostname + " (Server shutdown: " + message + ")")
             self.socketDisconnected(socket, "Server shutdown: " + message)
+
         for serversocket in self.serverSockets:
             serversocket.close()
     
@@ -93,12 +94,12 @@ class ServerHandler:
             clientsToNotify = []
             for channel in client.channels:
                 for member in channel.members:
-                    if member not in clientsToNotify:
+                    if member not in clientsToNotify and member != client:
                         clientsToNotify.append(member)
                 channel.memberLeave(client)
 
             for clientToNotify in clientsToNotify:
-                clientToNotify.writeLine(str(client) + " QUIT :" + message)
+                clientToNotify.writeLine(":" + str(client) + " QUIT :" + message)
 
         if socket in self.selectList:
             self.selectList.remove(socket)
@@ -196,9 +197,6 @@ class Line:
                 self.count = self.readWord()
                 if self.isMoreToRead():
                     self.server = self.readWord()
-        elif self.firstWord == "KILL":
-            self.nickname = self.readWord()
-            self.comment = self.readWord()
         elif self.firstWord == "PONG":
             self.daemon = self.readWord()
             if self.isMoreToRead():

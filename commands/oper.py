@@ -6,9 +6,7 @@ def run(client, line, serverhandler):
 
     if client.hostname not in serverhandler.config.operhosts:
         client.sendNumeric(ERR_NOOPERHOST)
-        return
-
-    if username in serverhandler.config.opers.keys() and password == serverhandler.config.opers[username]:
+    elif username in serverhandler.config.opers.keys() and password == serverhandler.config.opers[username]:
         client.modes.append('o')
         client.sendNumeric(RPL_YOUREOPER)
     else:
