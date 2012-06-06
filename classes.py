@@ -15,6 +15,9 @@ class Config:
         self.opers = config['opers']
         self.operhosts = config['operhosts']
         self.port = config['port']
+        self.location = config['location']
+        self.locationspecific = config['locationspecific']
+        self.adminemail = config['adminemail']
 
 class ServerHandler:
     def __init__(self, config):
@@ -181,9 +184,6 @@ class Line:
                 if self.isMoreToRead():
                     self.remoteserver = self.readWord()
         elif self.firstWord == "TRACE":
-            if self.isMoreToRead():
-                self.server = self.readWord()
-        elif self.firstWord == "ADMIN":
             if self.isMoreToRead():
                 self.server = self.readWord()
         elif self.firstWord == "INFO":

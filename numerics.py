@@ -1,5 +1,9 @@
 # The source for most of these names is RFC 1459, but 329, 333, 671 come from https://www.alien.net.au/irc/irc2numerics.html
 
+RPL_ADMINME = "256", ":Administrative info about %s"
+RPL_ADMINLOC1 = "257", ":%s"
+RPL_ADMINLOC2 = "258", ":%s"
+RPL_ADMINEMAIL = "259", ":%s"
 RPL_AWAY = "301", "%s :%s"
 RPL_UNAWAY = "305", ":You are no longer marked as being away"
 RPL_NOWAWAY = "306", ":You have been marked as being away"

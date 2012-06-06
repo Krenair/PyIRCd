@@ -8,5 +8,8 @@
     },
     "operhosts": [
         "host"
-    ]
+    ],
+    "location": "",
+    "locationspecific": "",
+    "adminemail": ""
 }

@@ -1,4 +1,5 @@
 def loadCommands():
+    import admin
     import away
     import join
     import kick
@@ -17,7 +18,8 @@ def loadCommands():
     import who
     import whois
 
-    return {'AWAY': away,
+    return {'ADMIN': admin,
+            'AWAY': away,
             'JOIN': join,
             'KICK': kick,
             'KILL': kill,
