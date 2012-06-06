@@ -5,6 +5,7 @@ def loadCommands():
     import kill
     import mode
     import msg
+    import names
     import nick
     import oper
     import part
@@ -21,6 +22,7 @@ def loadCommands():
             'KICK': kick,
             'KILL': kill,
             'MODE': mode,
+            'NAMES': names,
             'NICK': nick,
             'NOTICE': msg,
             'OPER': oper,

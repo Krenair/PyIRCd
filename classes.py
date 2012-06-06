@@ -147,8 +147,6 @@ class Line:
         elif self.firstWord == "SQUIT":
             self.server = self.readWord()
             self.comment = self.readWord()
-        elif self.firstWord == "NAMES":
-            self.channels = self.readWord()
         elif self.firstWord == "LIST":
             if self.isMoreToRead():
                 self.channels = self.readWord()
@@ -314,8 +312,14 @@ class Client:
             for channelMember in channel.members:
                 channelMember.writeLine(":" + str(self) + " JOIN " + channel.name)
 
-                if channelMember in channel.userModes['o']:
+                if channelMember == channel.owner:
+                    memberInfo += '~'
+                elif channelMember in channel.userModes['a']:
+                    memberInfo += '&'
+                elif channelMember in channel.userModes['o']:
                     memberInfo += '@'
+                elif channelMember in channel.userModes['h']:
+                    memberInfo += '%'
                 elif channelMember in channel.userModes['v']:
                     memberInfo += '+'
 
