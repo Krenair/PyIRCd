@@ -32,7 +32,7 @@ class ServerHandler:
         self.outputLock = Lock()
 
     def sigint(self, message):
-        for socket, client in dict(self.clients):
+        for socket, client in dict(self.clients).items():
             client.writeLine("ERROR :Closing link: " + self.clients[socket].hostname + " (Server shutdown: " + message + ")")
             self.socketDisconnected(socket, "Server shutdown: " + message)
 
