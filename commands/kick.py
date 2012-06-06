@@ -1,4 +1,4 @@
-from numerics import ERR_NOSUCHCHANNEL, ERR_NOTONCHANNEL, ERR_CHANOPRIVSNEEDED
+from numerics import ERR_NOSUCHCHANNEL, ERR_NOSUCHNICK, ERR_USERNOTINCHANNEL, ERR_NOTONCHANNEL, ERR_CHANOPRIVSNEEDED
 
 def run(client, line, serverhandler):
     channelName = line.readWord()
@@ -7,18 +7,22 @@ def run(client, line, serverhandler):
     if line.isMoreToRead():
         comment = line.readToEnd()[1:]
     else:
-        comment = None
+        comment = targetName
 
     target = serverhandler.getClient(targetName)
     channel = serverhandler.getChannel(channelName)
 
     if channel is None:
         client.sendNumeric(ERR_NOSUCHCHANNEL, channelName)
-    elif target is None or target not in channel.members: # TODO: Error
-        pass
+    elif target is None:
+        client.sendNumeric(ERR_NOSUCHNICK, targetName)
+    elif target not in channel.members:
+        client.sendNumeric(ERR_USERNOTINCHANNEL, target.nickname, channel.name)
     elif client not in channel.members:
         client.sendNumeric(ERR_NOTONCHANNEL, channel.name)
-    elif client != channel.owner and client not in channel.userModes['o'] and client not in channel.userModes['h'] and client not in channel.userModes['o']:
+    elif client not in channel.userModes['o'] + channel.userModes['h'] + channel.userModes['o'] + [channel.owner]:
         client.sendNumeric(ERR_CHANOPRIVSNEEDED, channelName)
     else:
-        pass
+        for channelMember in channel.members:
+            channelMember.writeLine(":" + str(client) + " KICK " + channel.name + " " + target.nickname)
+        channel.memberLeave(target)

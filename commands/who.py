@@ -20,6 +20,6 @@ def run(client, line, serverhandler):
         if channelMember in channel.userModes['v']:
             flags += '+'
 
-        client.sendNumeric(RPL_WHOREPLY, channel.name, channelMember.username, channelMember.hostname, serverhandler.config.servername, channelMember.nickname, flags, '0', channelMember.realname[1:])
+        client.sendNumeric(RPL_WHOREPLY, channel.name, channelMember.username, channelMember.hostname, serverhandler.config.servername, channelMember.nickname, flags, '0', channelMember.realname)
 
     client.sendNumeric(RPL_ENDOFWHO, pattern)

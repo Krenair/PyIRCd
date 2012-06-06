@@ -14,6 +14,7 @@ class Config:
         self.motd = open(config['motdfile']).read()
         self.opers = config['opers']
         self.operhosts = config['operhosts']
+        self.port = config['port']
 
 class ServerHandler:
     def __init__(self, config):
@@ -155,11 +156,6 @@ class Line:
         elif self.firstWord == "INVITE":
             self.nickname = self.readWord()
             self.channel = self.readWord()
-        elif self.firstWord == "KICK":
-            self.channel = self.readWord()
-            self.nickname = self.readWord()
-            if self.isMoreToRead():
-                self.comment = self.readWord()
         elif self.firstWord == "VERSION":
             if self.isMoreToRead():
                 self.server = self.readWord()
@@ -327,7 +323,7 @@ class Client:
 
                 memberInfo += channelMember.nickname + ' '
 
-            self.sendNumeric(RPL_NAMREPLY, " = " + channel.name, memberInfo[:-1])
+            self.sendNumeric(RPL_NAMREPLY, "= " + channel.name, memberInfo[:-1])
             self.sendNumeric(RPL_ENDOFNAMES, channel.name)
             if channel.topic is not None:
                 self.sendNumeric(RPL_TOPIC, channel, channel.topic)
@@ -360,6 +356,7 @@ class Channel:
 
     def memberLeave(self, member):
         self.members.remove(member)
+        member.channels.remove(self)
         for modeGroup in self.userModes.values():
             if member in modeGroup:
                 modeGroup.remove(member)

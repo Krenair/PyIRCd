@@ -1,6 +1,7 @@
 {
     "servername": "localhosttest",
-    "serverinfo": "Test server"
+    "port": 6667,
+    "serverinfo": "Test server",
     "motdfile": "motd.txt",
     "opers": {
         "username": "password"

@@ -21,7 +21,7 @@ def signal_handler(signal, frame):
 signal(SIGINT, signal_handler)
 
 mainserversocket = socket(AF_INET, SOCK_STREAM)
-mainserversocket.bind((gethostname(), 6667))
+mainserversocket.bind((gethostname(), serverhandler.config.port))
 mainserversocket.listen(1)
 serverhandler.addServerSocket(mainserversocket)
 host, port = mainserversocket.getsockname()
