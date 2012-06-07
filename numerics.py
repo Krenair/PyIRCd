@@ -1,4 +1,4 @@
-# The source for most of these names is RFC 1459, but 329, 333, 671 come from https://www.alien.net.au/irc/irc2numerics.html
+# The source for most of these names is RFC 1459, but some come from https://www.alien.net.au/irc/irc2numerics.html
 
 RPL_WELCOME = "001", ":Welcome to the %s, %s"
 RPL_YOURHOST = "002", ":Your host is %s[%s/%i], running PyIRCd-%s"
@@ -30,6 +30,7 @@ RPL_CREATIONTIME = "329", "%s %i"
 RPL_NOTOPIC = "331", "%s :No topic is set"
 RPL_TOPIC = "332", "%s :%s"
 RPL_TOPICWHOTIME = "333", "%s %s %s"
+RPL_INVITING = "341", "%s %s"
 RPL_VERSION = "351", "%s.%s %s :%s"
 RPL_WHOREPLY = "352", "%s %s %s %s %s %s :%s %s"
 RPL_NAMREPLY = "353", "%s :%s"
@@ -47,6 +48,7 @@ ERR_CANNOTSENDTOCHAN = "404", "%s :Cannot send to channel"
 ERR_UNKNOWNCOMMAND = "421", "%s :Unknown command"
 ERR_USERNOTINCHANNEL = "441", "%s %s :They aren't on that channel"
 ERR_NOTONCHANNEL = "442", "%s :You're not on that channel"
+ERR_USERONCHANNEL = "443", "%s %s :is already on channel"
 ERR_NOTREGISTERED = "451", ":You have not registered"
 ERR_ALREADYREGISTRED = "462", ":You may not reregister"
 ERR_PASSWDMISMATCH = "464", ":Password incorrect"

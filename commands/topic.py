@@ -13,7 +13,7 @@ def run(client, line, serverhandler):
     elif topic is not None:
         if client not in channel.members:
             client.sendNumeric(ERR_NOTONCHANNEL, channel.name)
-        elif 't' in channel.modes and client not in channel.userModes['o']:
+        elif 't' in channel.modes and client not in channel.getOps():
             client.sendNumeric(ERR_CHANOPRIVSNEEDED, channel.name)
         else:
             channel.topic = topic

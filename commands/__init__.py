@@ -2,6 +2,7 @@ def loadCommands():
     import admin
     import away
     import info
+    import invite
     import join
     import kick
     import kill
@@ -24,6 +25,7 @@ def loadCommands():
     return {'ADMIN': admin,
             'AWAY': away,
             'INFO': info,
+            'INVITE': invite,
             'JOIN': join,
             'KICK': kick,
             'KILL': kill,

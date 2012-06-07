@@ -14,11 +14,20 @@ def run(client, line, serverhandler):
     for channelMember in channel.members:
         flags = "H" #TODO: Work out why this should be G in some situations.
 
+        if channelMember in channel.userModes['v']:
+            flags += '+'
+
+        if channelMember in channel.userModes['h']:
+            flags += '%'
+
         if channelMember in channel.userModes['o']:
             flags += '@'
 
-        if channelMember in channel.userModes['v']:
-            flags += '+'
+        if channelMember in channel.userModes['a']:
+            flags += '&'
+
+        if channelMember == channel.owner:
+            flags += '~'
 
         client.sendNumeric(RPL_WHOREPLY, channel.name, channelMember.username, channelMember.hostname, serverhandler.config.servername, channelMember.nickname, flags, '0', channelMember.realname)
 

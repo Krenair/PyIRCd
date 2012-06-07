@@ -20,7 +20,7 @@ def run(client, line, serverhandler):
         client.sendNumeric(ERR_USERNOTINCHANNEL, target.nickname, channel.name)
     elif client not in channel.members:
         client.sendNumeric(ERR_NOTONCHANNEL, channel.name)
-    elif client not in channel.userModes['o'] + channel.userModes['h'] + channel.userModes['o'] + [channel.owner]:
+    elif client not in channel.getOps():
         client.sendNumeric(ERR_CHANOPRIVSNEEDED, channelName)
     else:
         for channelMember in channel.members:

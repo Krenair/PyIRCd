@@ -163,9 +163,6 @@ class Line:
                 self.channels = self.readWord()
                 if self.isMoreToRead():
                     self.server = self.readWord()
-        elif self.firstWord == "INVITE":
-            self.nickname = self.readWord()
-            self.channel = self.readWord()
         elif self.firstWord == "STATS":
             if self.isMoreToRead():
                 self.query = self.readWord()
@@ -251,6 +248,7 @@ class Client:
         self.loggedIn = False
         self.channels = []
         self.modes = []
+        self.invitedTo = [] # A list of channel names this user has been invited to.
         self.signOnTime = int(time())
         self.lastActiveTime = int(time())
         self.awayMessage = None
@@ -299,7 +297,7 @@ class Client:
         self.sendMOTD()
 
     def sendSupports(self): # TODO
-        self.sendNumeric(RPL_ISUPPORT, "CHANTYPES=# PREFIX=(qaohv)~&@%+ NETWORK=" + self.serverhandler.config.networkname) #http://www.irc.org/tech_docs/005.html
+        self.sendNumeric(RPL_ISUPPORT, "CHANTYPES=# CASEMAPPING=ascii CHANMODES=,,,it PREFIX=(qaohv)~&@%+ NETWORK=" + self.serverhandler.config.networkname) #http://www.irc.org/tech_docs/005.html
 
     def sendMOTD(self):
         self.sendNumeric(RPL_MOTDSTART, self.serverhandler.config.servername)
@@ -322,11 +320,14 @@ class Client:
         self.nickname = newname
 
     def tryJoin(self, channel, key):
-        if 'i' in channel.modes and self not in channel.userModes['i']:
+        if 'i' in channel.modes and channel.name not in self.invitedTo:
             self.sendNumeric(ERR_INVITEONLYCHAN, channel.name)
         elif 'k' in channel.modes and key != channel.modes['k']:
             self.sendNumeric(ERR_BADCHANNELKEY, channel.name)
         else:
+            if channel.name in self.invitedTo:
+                self.invitedTo.remove(channel.name)
+
             self.channels.append(channel)
             channel.members.append(self)
             memberInfo = ''
@@ -386,6 +387,9 @@ class Channel:
 
         if len(self.members) < 1:
             self.serverhandler.channels.remove(self)
+
+    def getOps(self):
+        return list(set([self.owner] + self.userModes['a'] + self.userModes['o'] + self.userModes['h']))
 
 class ModeChange:
     def __init__(self, to, by, mode, given, nick = None):
