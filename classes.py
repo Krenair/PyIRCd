@@ -36,9 +36,8 @@ class ServerHandler:
         self.channels = []
         self.run = True
         self.outputLock = Lock()
-        t = localtime(os_path.getctime(self.config.path))
-        self.creationdate = strftime('%a %-e %b %G', t) # Sat 3 Sep 2011
-        self.creationtime = strftime('%H:%M:%S %Z', t) # 5:30:13 EDT
+        self.creationTime = localtime(os_path.getctime(self.config.path))
+        self.startTime = localtime()
         p = popen('git log -n 1 --pretty=format:"%h"')
         self.version = 'git/' + p.read()
         p.close()
@@ -189,9 +188,6 @@ class Line:
         elif self.firstWord == "TRACE":
             if self.isMoreToRead():
                 self.server = self.readWord()
-        elif self.firstWord == "INFO":
-            if self.isMoreToRead():
-                self.server = self.readWord()
         elif self.firstWord == "WHOWAS":
             self.nickname = self.readWord()
             if self.isMoreToRead():
@@ -283,7 +279,7 @@ class Client:
         self.loggedIn = True
         self.sendNumeric(RPL_WELCOME, self.serverhandler.config.networkname, self.nickname)
         self.sendNumeric(RPL_YOURHOST, self.serverhandler.config.servername, self.serverhandler.config.servername, self.serverhandler.config.port, self.serverhandler.version)
-        self.sendNumeric(RPL_CREATED, self.serverhandler.creationdate, self.serverhandler.creationtime)
+        self.sendNumeric(RPL_CREATED, strftime('on %a %-e %b %G at %H:%M:%S %Z', self.serverhandler.creationTime))
         self.sendNumeric(RPL_MYINFO, self.serverhandler.config.servername, self.serverhandler.version)
         self.sendSupports()
         clientcount = len(self.serverhandler.clients)
