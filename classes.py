@@ -1,20 +1,23 @@
 from commands import loadCommands
 from json import load as json_load
+from os import popen, path as os_path
 from sys import platform, stdin
 from threading import Lock
-from time import time
-from numerics import ERR_UNKNOWNCOMMAND, RPL_TOPICWHOTIME, RPL_MOTDSTART, RPL_MOTD, RPL_ENDOFMOTD, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_TOPIC, ERR_INVITEONLYCHAN, ERR_BADCHANNELKEY
+from time import time, localtime, strftime
+from numerics import ERR_UNKNOWNCOMMAND, RPL_TOPICWHOTIME, RPL_MOTDSTART, RPL_MOTD, RPL_ENDOFMOTD, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_TOPIC, ERR_INVITEONLYCHAN, ERR_BADCHANNELKEY, RPL_LUSERCLIENT, RPL_LUSEROP, RPL_LUSERCHANNELS, RPL_LUSERME, RPL_WELCOME, RPL_YOURHOST, RPL_CREATED, RPL_MYINFO, RPL_ISUPPORT, RPL_LOCALUSERS, RPL_GLOBALUSERS
 
 class Config:
     def __init__(self, path):
         self.path = path
         config = json_load(open(path))
         self.servername = config['servername']
+        self.networkname = config['networkname']
+        self.port = config['port']
+        self.maxclients = config['maxclients']
         self.serverinfo = config['serverinfo']
         self.motd = open(config['motdfile']).read()
         self.opers = config['opers']
         self.operhosts = config['operhosts']
-        self.port = config['port']
         self.location = config['location']
         self.locationspecific = config['locationspecific']
         self.adminemail = config['adminemail']
@@ -33,6 +36,12 @@ class ServerHandler:
         self.channels = []
         self.run = True
         self.outputLock = Lock()
+        t = localtime(os_path.getctime(self.config.path))
+        self.creationdate = strftime('%a %-e %b %G', t) # Sat 3 Sep 2011
+        self.creationtime = strftime('%H:%M:%S %Z', t) # 5:30:13 EDT
+        p = popen('git log -n 1 --pretty=format:"%h"')
+        self.version = 'git/' + p.read()
+        p.close()
 
     def sigint(self, message):
         for socket, client in dict(self.clients).items():
@@ -278,6 +287,25 @@ class Client:
 
     def login(self):
         self.loggedIn = True
+        self.sendNumeric(RPL_WELCOME, self.serverhandler.config.networkname, self.nickname)
+        self.sendNumeric(RPL_YOURHOST, self.serverhandler.config.servername, self.serverhandler.config.servername, self.serverhandler.config.port, self.serverhandler.version)
+        self.sendNumeric(RPL_CREATED, self.serverhandler.creationdate, self.serverhandler.creationtime)
+        self.sendNumeric(RPL_MYINFO, self.serverhandler.config.servername, self.serverhandler.version)
+        self.sendNumeric(RPL_ISUPPORT, "CHANTYPES=# PREFIX=(qaohv)~&@%+ NETWORK=" + self.serverhandler.config.networkname) #http://www.irc.org/tech_docs/005.html
+        clientcount = len(self.serverhandler.clients)
+        self.sendNumeric(RPL_LUSERCLIENT, clientcount, 0, 1) # 0 invisible users, 1 server
+
+        opers = 0
+        for client in self.serverhandler.clients.values():
+            if 'o' in client.modes:
+                opers += 1
+
+        self.sendNumeric(RPL_LUSEROP, opers)
+        self.sendNumeric(RPL_LUSERCHANNELS, len(self.serverhandler.channels))
+        self.sendNumeric(RPL_LUSERME, len(self.serverhandler.clients), 1) # 1 server
+        maxclients = self.serverhandler.config.maxclients
+        self.sendNumeric(RPL_LOCALUSERS, clientcount, maxclients, clientcount, maxclients) #RPL_LOCALUSERS
+        self.sendNumeric(RPL_GLOBALUSERS, clientcount, maxclients, clientcount, maxclients) #RPL_GLOBALUSERS
         self.sendMOTD()
 
     def sendMOTD(self):

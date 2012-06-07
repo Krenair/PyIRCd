@@ -1,6 +1,8 @@
 {
-    "servername": "localhosttest",
+    "servername": "localhost",
+    "networkname": "TestNet",
     "port": 6667,
+    "maxclients": 10,
     "serverinfo": "Test server",
     "motdfile": "motd.txt",
     "opers": {
