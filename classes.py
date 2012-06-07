@@ -167,9 +167,6 @@ class Line:
         elif self.firstWord == "INVITE":
             self.nickname = self.readWord()
             self.channel = self.readWord()
-        elif self.firstWord == "VERSION":
-            if self.isMoreToRead():
-                self.server = self.readWord()
         elif self.firstWord == "STATS":
             if self.isMoreToRead():
                 self.query = self.readWord()
@@ -291,7 +288,7 @@ class Client:
         self.sendNumeric(RPL_YOURHOST, self.serverhandler.config.servername, self.serverhandler.config.servername, self.serverhandler.config.port, self.serverhandler.version)
         self.sendNumeric(RPL_CREATED, self.serverhandler.creationdate, self.serverhandler.creationtime)
         self.sendNumeric(RPL_MYINFO, self.serverhandler.config.servername, self.serverhandler.version)
-        self.sendNumeric(RPL_ISUPPORT, "CHANTYPES=# PREFIX=(qaohv)~&@%+ NETWORK=" + self.serverhandler.config.networkname) #http://www.irc.org/tech_docs/005.html
+        self.sendSupports()
         clientcount = len(self.serverhandler.clients)
         self.sendNumeric(RPL_LUSERCLIENT, clientcount, 0, 1) # 0 invisible users, 1 server
 
@@ -307,6 +304,9 @@ class Client:
         self.sendNumeric(RPL_LOCALUSERS, clientcount, maxclients, clientcount, maxclients) #RPL_LOCALUSERS
         self.sendNumeric(RPL_GLOBALUSERS, clientcount, maxclients, clientcount, maxclients) #RPL_GLOBALUSERS
         self.sendMOTD()
+
+    def sendSupports(self): # TODO
+        self.sendNumeric(RPL_ISUPPORT, "CHANTYPES=# PREFIX=(qaohv)~&@%+ NETWORK=" + self.serverhandler.config.networkname) #http://www.irc.org/tech_docs/005.html
 
     def sendMOTD(self):
         self.sendNumeric(RPL_MOTDSTART, self.serverhandler.config.servername)

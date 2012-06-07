@@ -15,6 +15,7 @@ def loadCommands():
     import rehash
     import topic
     import user
+    import version
     import who
     import whois
 
@@ -35,5 +36,6 @@ def loadCommands():
             'REHASH': rehash,
             'TOPIC': topic,
             'USER': user,
+            'VERSION': version,
             'WHO': who,
             'WHOIS': whois}
