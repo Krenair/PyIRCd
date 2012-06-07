@@ -13,6 +13,7 @@ def loadCommands():
     import ping
     import quit
     import rehash
+    import timecmd
     import topic
     import user
     import version
@@ -34,6 +35,7 @@ def loadCommands():
             'PRIVMSG': msg,
             'QUIT': quit,
             'REHASH': rehash,
+            'TIME': timecmd,
             'TOPIC': topic,
             'USER': user,
             'VERSION': version,

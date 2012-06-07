@@ -180,9 +180,6 @@ class Line:
                     self.servermask = self.readWord()
                 else:
                     self.servermask = word1
-        elif self.firstWord == "TIME":
-            if self.isMoreToRead():
-                self.server = self.readWord()
         elif self.firstWord == "CONNECT":
             self.targetserver = self.readWord()
             if self.isMoreToRead():
