@@ -1,5 +1,5 @@
 def loadCommands():
-    # TODO: Add WHOWAS, USERS, USERHOST, ISON
+    # TODO: Add ISON, USERS, WHOWAS
     import admin
     import away
     import info
@@ -20,6 +20,7 @@ def loadCommands():
     import timecmd
     import topic
     import user
+    import userhost
     import version
     import wallops
     import who
@@ -46,6 +47,7 @@ def loadCommands():
             'TIME': timecmd,
             'TOPIC': topic,
             'USER': user,
+            'USERHOST': userhost,
             'VERSION': version,
             'WALLOPS': wallops,
             'WHO': who,

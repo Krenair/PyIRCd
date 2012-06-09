@@ -211,8 +211,6 @@ class Line:
         elif self.firstWord == "USERS":
             if self.isMoreToRead():
                 self.server = self.readWord()
-        elif self.firstWord == "USERHOST":
-            self.nicknames = self.readToEnd()
         elif self.firstWord == "ISON":
             self.nicknames = self.readToEnd()
 
