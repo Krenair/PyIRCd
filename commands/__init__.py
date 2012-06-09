@@ -1,5 +1,5 @@
 def loadCommands():
-    # TODO: Add WHOWAS, USERS, WALLOPS, USERHOST, ISON
+    # TODO: Add WHOWAS, USERS, USERHOST, ISON
     import admin
     import away
     import info
@@ -21,6 +21,7 @@ def loadCommands():
     import topic
     import user
     import version
+    import wallops
     import who
     import whois
 
@@ -46,5 +47,6 @@ def loadCommands():
             'TOPIC': topic,
             'USER': user,
             'VERSION': version,
+            'WALLOPS': wallops,
             'WHO': who,
             'WHOIS': whois}
