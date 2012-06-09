@@ -1,3 +1,6 @@
+def getCommandNames():
+    return ['QUIT']
+
 def run(client, line, serverhandler):
     if line.isMoreToRead():
         message = "Quit: " + line.readToEnd()[1:]

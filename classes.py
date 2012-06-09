@@ -1,4 +1,5 @@
-from commands import loadCommands
+import commands
+from pkgutil import iter_modules
 from json import load as json_load
 from os import popen, path as os_path
 from sys import platform, stdin
@@ -24,7 +25,7 @@ class Config:
 
 class ServerHandler:
     def __init__(self, config):
-        self.commandMap = loadCommands()
+        self.commandMap = self.loadCommands()
         self.commandUsage = {}
         for command in self.commandMap.keys():
             self.commandUsage[command] = 0
@@ -47,6 +48,14 @@ class ServerHandler:
         p.close()
         self.connectionsReceived = 0
         self.highestConnectionCount = 0
+
+    def loadCommands(self):
+        out = {}
+        for importer, package_name, _ in iter_modules(["commands"]):
+            module = importer.find_module(package_name).load_module(package_name)
+            for command in module.getCommandNames():
+                out[command] = module
+        return out
 
     def sigint(self, message):
         for socket, client in dict(self.clients).items():

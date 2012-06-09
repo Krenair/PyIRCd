@@ -1,5 +1,8 @@
 from numerics import ERR_NOPRIVILEGES, ERR_NOSUCHNICK
 
+def getCommandNames():
+    return ['KILL']
+
 def run(client, line, serverhandler):
     targetName = line.readWord()
     comment = line.readWord()[1:]

@@ -1,5 +1,8 @@
 from numerics import ERR_NOSUCHNICK, ERR_NOTONCHANNEL, ERR_CHANOPRIVSNEEDED, ERR_USERONCHANNEL, RPL_AWAY, RPL_INVITING
 
+def getCommandNames():
+    return ['INVITE']
+
 def run(client, line, serverhandler):
     targetName = line.readWord()
     channelName = line.readWord()

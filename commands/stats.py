@@ -2,10 +2,13 @@ from numerics import RPL_STATSLLINE, RPL_STATSCOMMANDS, RPL_STATSOLINE, RPL_STAT
 from time import localtime, mktime
 from datetime import timedelta
 
+def getCommandNames():
+    return ['STATS']
+
 def run(client, line, serverhandler):
     query = line.readWord()
     if query == 'm': # Returns a list of commands supported by the server and the usage count for each if the usage count is non zero;
-        for commandName, usageCount in serverhandler.commandUsage:
+        for commandName, usageCount in serverhandler.commandUsage.items():
             client.sendNumeric(RPL_STATSCOMMANDS, commandName, usageCount)
     elif query == 'u': # Returns a string showing how long the server has been up.
         client.sendNumeric(RPL_STATSUPTIME, str(timedelta(seconds=mktime(localtime()) - mktime(serverhandler.startTime))))

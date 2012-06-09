@@ -1,3 +1,6 @@
+def getCommandNames():
+    return ['PING']
+
 def run(client, line, serverhandler):
     text = line.readWord()
     if line.isMoreToRead():

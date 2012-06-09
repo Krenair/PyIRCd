@@ -1,5 +1,8 @@
 from numerics import ERR_NOSUCHCHANNEL, ERR_NOSUCHNICK, ERR_USERNOTINCHANNEL, ERR_NOTONCHANNEL, ERR_CHANOPRIVSNEEDED
 
+def getCommandNames():
+    return ['KICK']
+
 def run(client, line, serverhandler):
     channelName = line.readWord()
     targetName = line.readWord()

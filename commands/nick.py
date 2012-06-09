@@ -1,3 +1,6 @@
+def getCommandNames():
+    return ['NICK']
+
 def run(client, line, serverhandler):
     nickname = line.readWord()
     if line.isMoreToRead():

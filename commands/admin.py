@@ -1,5 +1,8 @@
 from numerics import RPL_ADMINME, RPL_ADMINLOC1, RPL_ADMINLOC2, RPL_ADMINEMAIL
 
+def getCommandNames():
+    return ['ADMIN']
+
 def run(client, line, serverhandler):
     client.sendNumeric(RPL_ADMINME, serverhandler.config.servername)
     client.sendNumeric(RPL_ADMINLOC1, serverhandler.config.location)

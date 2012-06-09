@@ -1,10 +1,8 @@
-from __init__ import loadCommands
 from classes import Config
+
+def getCommandNames():
+    return ['REHASH']
 
 def run(client, line, serverhandler):
     serverhandler.config = Config("config.json")
-
-    for module in serverhandler.commandMap.values():
-        reload(module)
-
-    serverhandler.commandMap = loadCommands()
+    serverhandler.commandMap = serverhandler.loadCommands()

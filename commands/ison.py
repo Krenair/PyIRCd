@@ -1,5 +1,8 @@
 from numerics import ERR_NEEDMOREPARAMS, RPL_ISON
 
+def getCommandNames():
+    return ['ISON']
+
 def run(client, line, serverhandler):
     if not line.isMoreToRead():
         client.sendNumeric(ERR_NEEDMOREPARAMS, 'ISON')

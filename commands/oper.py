@@ -1,5 +1,8 @@
 from numerics import ERR_NOOPERHOST, RPL_YOUREOPER, ERR_PASSWDMISMATCH
 
+def getCommandNames():
+    return ['OPER']
+
 def run(client, line, serverhandler):
     username = line.readWord()
     password = line.readWord()

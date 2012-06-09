@@ -1,5 +1,8 @@
 from numerics import RPL_WHOREPLY, RPL_ENDOFWHO
 
+def getCommandNames():
+    return ['WHO']
+
 def run(client, line, serverhandler):
     if line.isMoreToRead():
         pattern = line.readWord()

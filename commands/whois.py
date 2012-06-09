@@ -1,6 +1,9 @@
 from time import time
 from numerics import ERR_NOSUCHNICK, RPL_WHOISUSER, RPL_WHOISCHANNELS, RPL_WHOISSERVER, RPL_WHOISSECURE, RPL_AWAY, RPL_WHOISOPERATOR, RPL_WHOISIDLE, RPL_ENDOFWHOIS
 
+def getCommandNames():
+    return ['WHOIS']
+
 def run(client, line, serverhandler):
     for targetName in line.readWord().split(","):
         target = serverhandler.getClient(targetName)

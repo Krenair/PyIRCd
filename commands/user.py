@@ -1,5 +1,8 @@
 from numerics import ERR_ALREADYREGISTRED
 
+def getCommandNames():
+    return ['USER']
+
 def run(client, line, serverhandler):
     username = line.readWord()
     hostname = line.readWord()

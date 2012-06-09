@@ -1,6 +1,9 @@
 from classes import ModeChange
 from numerics import RPL_CHANNELMODEIS, RPL_CREATIONTIME
 
+def getCommandNames():
+    return ['MODE']
+
 def run(client, line, serverhandler): # TODO
     changes = []
     to = line.readWord()

@@ -1,5 +1,8 @@
 from numerics import RPL_ENDOFNAMES, RPL_NAMREPLY
 
+def getCommandNames():
+    return ['NAMES']
+
 def run(client, line, serverhandler):
     for channelName in line.readWord().split(","):
         channel = serverhandler.getChannel(channelName)

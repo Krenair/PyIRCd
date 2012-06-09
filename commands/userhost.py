@@ -1,5 +1,8 @@
 from numerics import ERR_NEEDMOREPARAMS, RPL_USERHOST
 
+def getCommandNames():
+    return ['USERHOST']
+
 def run(client, line, serverhandler):
     if not line.isMoreToRead():
         client.sendNumeric(ERR_NEEDMOREPARAMS, 'USERHOST')

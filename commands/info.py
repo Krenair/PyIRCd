@@ -2,6 +2,9 @@ from numerics import RPL_INFO, RPL_ENDOFINFO
 
 from time import strftime
 
+def getCommandNames():
+    return ['INFO']
+
 def run(client, line, serverhandler):
     for line in open('pyircd.info').read().splitlines():
         client.sendNumeric(RPL_INFO, line)

@@ -1,5 +1,8 @@
 from numerics import ERR_NOSUCHNICK, ERR_CANNOTSENDTOCHAN, RPL_AWAY
 
+def getCommandNames():
+    return ['PRIVMSG', 'NOTICE']
+
 def run(client, line, serverhandler):
     receivers = line.readWord().split(",")
     text = line.readToEnd()[1:]

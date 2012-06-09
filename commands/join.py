@@ -1,6 +1,9 @@
 from classes import Channel
 from numerics import ERR_NOTREGISTERED
 
+def getCommandNames():
+    return ['JOIN']
+
 def run(client, line, serverhandler):
     channels = line.readWord().split(",")
     if line.isMoreToRead():

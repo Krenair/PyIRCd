@@ -1,5 +1,8 @@
 from numerics import ERR_NOSUCHCHANNEL, ERR_NOTONCHANNEL, ERR_CHANOPRIVSNEEDED, RPL_NOTOPIC, RPL_TOPIC, RPL_TOPICWHOTIME
 
+def getCommandNames():
+    return ['TOPIC']
+
 def run(client, line, serverhandler):
     channelName = line.readWord()
     if line.isMoreToRead():

@@ -1,5 +1,8 @@
 from numerics import ERR_NOSUCHCHANNEL, ERR_NOTONCHANNEL
 
+def getCommandNames():
+    return ['PART']
+
 def run(client, line, serverhandler):
     for channel in line.readWord().split(","):
         channel = serverhandler.getChannel(channel)
