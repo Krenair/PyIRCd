@@ -211,8 +211,6 @@ class Line:
         elif self.firstWord == "USERS":
             if self.isMoreToRead():
                 self.server = self.readWord()
-        elif self.firstWord == "ISON":
-            self.nicknames = self.readToEnd()
 
     def readWord(self):
         """ Read until the next space."""

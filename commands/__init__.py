@@ -1,9 +1,10 @@
 def loadCommands():
-    # TODO: Add ISON, USERS, WHOWAS
+    # TODO: Add USERS and WHOWAS
     import admin
     import away
     import info
     import invite
+    import ison
     import join
     import kick
     import kill
@@ -30,6 +31,7 @@ def loadCommands():
             'AWAY': away,
             'INFO': info,
             'INVITE': invite,
+            'ISON': ison,
             'JOIN': join,
             'KICK': kick,
             'KILL': kill,
