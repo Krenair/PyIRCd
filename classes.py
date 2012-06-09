@@ -25,6 +25,10 @@ class Config:
 class ServerHandler:
     def __init__(self, config):
         self.commandMap = loadCommands()
+        self.commandUsage = {}
+        for command in self.commandMap.keys():
+            self.commandUsage[command] = 0
+
         self.config = config
         self.serverSockets = []
         self.clients = {} # Socket -> client
@@ -41,6 +45,8 @@ class ServerHandler:
         p = popen('git log -n 1 --pretty=format:"%h"')
         self.version = 'git/' + p.read()
         p.close()
+        self.connectionsReceived = 0
+        self.highestConnectionCount = 0
 
     def sigint(self, message):
         for socket, client in dict(self.clients).items():
@@ -56,6 +62,10 @@ class ServerHandler:
         client = Client(socket, serversocket, remotehost, remoteport, self)
         self.clients[socket] = client
         self.selectList.append(socket)
+        self.connectionsReceived += 1
+        if self.connectionsReceived > self.highestConnectionCount:
+            self.highestConnectionCount = self.connectionsReceived
+
         client.writeLine(":" + self.config.servername + " NOTICE * :*** Looking up your hostname...")
         client.writeLine(":" + self.config.servername + " NOTICE * :*** Checking Ident")
         client.writeLine(":" + self.config.servername + " NOTICE * :*** Found your hostname")
@@ -94,6 +104,8 @@ class ServerHandler:
             if l.firstWord not in self.commandMap.keys():
                 client.sendNumeric(ERR_UNKNOWNCOMMAND, l.firstWord)
                 return
+
+            self.commandUsage[l.firstWord] += 1
 
             self.commandMap[l.firstWord].run(client, l, self)
         elif stream == stdin:
@@ -161,11 +173,6 @@ class Line:
         elif self.firstWord == "LIST":
             if self.isMoreToRead():
                 self.channels = self.readWord()
-                if self.isMoreToRead():
-                    self.server = self.readWord()
-        elif self.firstWord == "STATS":
-            if self.isMoreToRead():
-                self.query = self.readWord()
                 if self.isMoreToRead():
                     self.server = self.readWord()
         elif self.firstWord == "LINKS":

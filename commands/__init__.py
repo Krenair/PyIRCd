@@ -1,4 +1,5 @@
 def loadCommands():
+    # TODO: Add WHOWAS, USERS, WALLOPS, USERHOST, ISON
     import admin
     import away
     import info
@@ -15,6 +16,7 @@ def loadCommands():
     import ping
     import quit
     import rehash
+    import stats
     import timecmd
     import topic
     import user
@@ -39,6 +41,7 @@ def loadCommands():
             'PRIVMSG': msg,
             'QUIT': quit,
             'REHASH': rehash,
+            'STATS': stats,
             'TIME': timecmd,
             'TOPIC': topic,
             'USER': user,

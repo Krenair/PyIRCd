@@ -33,6 +33,9 @@ if len(serverhandler.serverSockets) < 1:
 
 while serverhandler.run:
     s = select(serverhandler.selectList, [], serverhandler.selectList, 1) # 1 as timeout so we can keep adding to the lists.
+    if not serverhandler.run:
+        break
+
     for stream in s[0]: # Reads.
         if stream in serverhandler.serverSockets: # Server socket returned - this must mean that here is an incoming connection.
             Thread(target=serverhandler.acceptConnection, args=[stream]).start()
