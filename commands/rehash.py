@@ -4,5 +4,5 @@ def getCommandNames():
     return ['REHASH']
 
 def run(client, line, serverhandler):
-    serverhandler.config = Config("config.json")
+    serverhandler.config = Config(serverhandler.configPath)
     serverhandler.commandMap = serverhandler.loadCommands()

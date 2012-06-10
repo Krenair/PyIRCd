@@ -9,7 +9,6 @@ from numerics import ERR_UNKNOWNCOMMAND, RPL_TOPICWHOTIME, RPL_MOTDSTART, RPL_MO
 
 class Config:
     def __init__(self, path):
-        self.path = path
         config = json_load(open(path))
         self.servername = config['servername']
         self.networkname = config['networkname']
@@ -24,13 +23,14 @@ class Config:
         self.adminemail = config['adminemail']
 
 class ServerHandler:
-    def __init__(self, config):
+    def __init__(self, configPath):
         self.commandMap = self.loadCommands()
         self.commandUsage = {}
         for command in self.commandMap.keys():
             self.commandUsage[command] = 0
 
-        self.config = config
+        self.config = Config(configPath)
+        self.configPath = configPath
         self.serverSockets = []
         self.clients = {} # Socket -> client
         self.remoteSockets = []
@@ -41,7 +41,7 @@ class ServerHandler:
         self.channels = []
         self.run = True
         self.outputLock = Lock()
-        self.creationTime = localtime(os_path.getctime(self.config.path))
+        self.creationTime = localtime(os_path.getctime(self.configPath))
         self.startTime = localtime()
         p = popen('git log -n 1 --pretty=format:"%h"')
         self.version = 'git/' + p.read()

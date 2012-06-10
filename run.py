@@ -1,11 +1,11 @@
-from classes import Config, ServerHandler
+from classes import ServerHandler
 from threading import Thread
 from select import select
 from signal import signal, SIGINT
 from socket import gethostname, socket, AF_INET, SOCK_STREAM
 from sys import excepthook, exit
 
-serverhandler = ServerHandler(Config("config.json"))
+serverhandler = ServerHandler("config.json")
 
 oldexcepthook = excepthook
 def newexcepthook(type, value, tb):
