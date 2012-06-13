@@ -182,10 +182,6 @@ class Line:
             self.capabilities = self.readToEnd()
         elif self.firstWord == "PASS":
             self.password = self.readWord()
-        elif self.firstWord == "SERVER":
-            self.servername = self.readWord()
-            self.hopcount = self.readWord()
-            self.info = self.readWord()
         elif self.firstWord == "SQUIT":
             self.server = self.readWord()
             self.comment = self.readWord()
@@ -202,12 +198,6 @@ class Line:
                     self.servermask = self.readWord()
                 else:
                     self.servermask = word1
-        elif self.firstWord == "CONNECT":
-            self.targetserver = self.readWord()
-            if self.isMoreToRead():
-                self.port = self.readWord()
-                if self.isMoreToRead():
-                    self.remoteserver = self.readWord()
         elif self.firstWord == "TRACE":
             if self.isMoreToRead():
                 self.server = self.readWord()
@@ -221,12 +211,6 @@ class Line:
             self.daemon = self.readWord()
             if self.isMoreToRead():
                 self.daemon2 = self.readWord()
-        elif self.firstWord == "ERROR":
-            self.errormessage = self.readWord()
-        elif self.firstWord == "SUMMON":
-            self.user = self.readWord()
-            if self.isMoreToRead():
-                self.server = self.readWord()
         elif self.firstWord == "USERS":
             if self.isMoreToRead():
                 self.server = self.readWord()
@@ -508,7 +492,6 @@ class ModuleWatcher(ProcessEvent):
     def process_IN_DELETE(self, event):
         """A file has been deleted."""
         if (event.name.endswith('.py') or event.name.endswith('.pyc')) and event.pathname in self.moduleMap:
-            #self.wm.rm_watch(self.watchDescriptorMap[event.pathname])
             commands = self.moduleMap[event.pathname][1].getCommandNames()
             print 'Unloaded', event.name, 'which provided the following command(s): ' + ', '.join(commands)
             del self.watchDescriptorMap[event.pathname]
