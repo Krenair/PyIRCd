@@ -1,4 +1,5 @@
-from time import time
+import time
+
 from numerics import ERR_NOSUCHNICK, RPL_WHOISUSER, RPL_WHOISCHANNELS, RPL_WHOISSERVER, RPL_WHOISSECURE, RPL_AWAY, RPL_WHOISOPERATOR, RPL_WHOISIDLE, RPL_ENDOFWHOIS
 
 def getCommandNames():
@@ -46,5 +47,5 @@ def run(client, line, serverhandler):
             if 'o' in target.modes:
                 client.sendNumeric(RPL_WHOISOPERATOR, target.nickname)
 
-            client.sendNumeric(RPL_WHOISIDLE, target.nickname, int(time()) - target.lastActiveTime, target.signOnTime)
+            client.sendNumeric(RPL_WHOISIDLE, target.nickname, int(time.time()) - target.lastActiveTime, target.signOnTime)
             client.sendNumeric(RPL_ENDOFWHOIS, target.nickname)

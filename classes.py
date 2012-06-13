@@ -1,17 +1,18 @@
 import commands
-from imp import find_module, load_module, is_builtin
-from json import load as json_load
-from os import popen, walk, path as os_path
-from pkgutil import iter_modules
-from pyinotify import ThreadedNotifier, EventsCodes, WatchManager, ProcessEvent
-from sys import platform, stdin
-from threading import Lock
-from time import time, localtime, strftime
+import imp
+import json
+import os
+import pkgutil
+import sys
+import time
+
 from numerics import ERR_UNKNOWNCOMMAND, RPL_TOPICWHOTIME, RPL_MOTDSTART, RPL_MOTD, RPL_ENDOFMOTD, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_TOPIC, ERR_INVITEONLYCHAN, ERR_BADCHANNELKEY, RPL_LUSERCLIENT, RPL_LUSEROP, RPL_LUSERCHANNELS, RPL_LUSERME, RPL_WELCOME, RPL_YOURHOST, RPL_CREATED, RPL_MYINFO, RPL_ISUPPORT, RPL_LOCALUSERS, RPL_GLOBALUSERS
+from pyinotify import ThreadedNotifier, EventsCodes, WatchManager, ProcessEvent
+from threading import Lock
 
 class Config:
     def __init__(self, path):
-        config = json_load(open(path))
+        config = json.load(open(path))
         self.servername = config['servername']
         self.networkname = config['networkname']
         self.port = config['port']
@@ -38,14 +39,14 @@ class ServerHandler:
         self.remoteSockets = []
         self.readingFromSockets = []
         self.selectList = []
-        if platform != 'win32':
-            self.selectList.append(stdin)
+        if sys.platform != 'win32':
+            self.selectList.append(sys.stdin)
         self.channels = []
         self.run = True
         self.outputLock = Lock()
-        self.creationTime = localtime(os_path.getctime(self.configPath))
-        self.startTime = localtime()
-        p = popen('git log -n 1 --pretty=format:"%h"')
+        self.creationTime = time.localtime(os.path.getctime(self.configPath))
+        self.startTime = time.localtime()
+        p = os.popen('git log -n 1 --pretty=format:"%h"')
         self.version = 'git/' + p.read()
         p.close()
         self.connectionsReceived = 0
@@ -55,15 +56,13 @@ class ServerHandler:
         self.moduleWatcher = ModuleWatcher(self)
         self.commandMap = {}
 
-        for importer, package_name, _ in iter_modules(["commands"]):
+        for importer, package_name, _ in pkgutil.iter_modules(["commands"]):
             modInfo = importer.find_module(package_name)
             module = modInfo.load_module(package_name)
             importer.find_module(package_name)
             self.moduleWatcher.watch_module("commands/" + package_name)
             for command in module.getCommandNames():
                 self.commandMap[command] = module
-
-        self.moduleWatcher.start_watching()
 
     def sigint(self, message):
         self.moduleWatcher.stop_watching()
@@ -90,8 +89,8 @@ class ServerHandler:
         client.writeLine(":" + self.config.servername + " NOTICE * :*** Found your hostname")
 
     def readLine(self, stream): # Input from a socket or console.
-        if stream == stdin: # Console.
-            line = stdin.readline()
+        if stream == sys.stdin: # Console.
+            line = sys.stdin.readline()
         else: # A socket.
             try:
                 line = ""
@@ -118,7 +117,7 @@ class ServerHandler:
             l = Line(line)
 
             if l.firstWord not in ['PING', 'PONG']:
-                client.lastActiveTime = int(time())
+                client.lastActiveTime = int(time.time())
 
             if l.firstWord not in self.commandMap.keys():
                 client.sendNumeric(ERR_UNKNOWNCOMMAND, l.firstWord)
@@ -127,7 +126,7 @@ class ServerHandler:
             self.commandUsage[l.firstWord] += 1
 
             self.commandMap[l.firstWord].run(client, l, self)
-        elif stream == stdin:
+        elif stream == sys.stdin:
             print line
     
     def socketDisconnected(self, socket, message = None):
@@ -253,8 +252,8 @@ class Client:
         self.channels = []
         self.modes = []
         self.invitedTo = [] # A list of channel names this user has been invited to.
-        self.signOnTime = int(time())
-        self.lastActiveTime = int(time())
+        self.signOnTime = int(time.time())
+        self.lastActiveTime = int(time.time())
         self.awayMessage = None
         self.securelyConnected = False
     
@@ -281,7 +280,7 @@ class Client:
         self.loggedIn = True
         self.sendNumeric(RPL_WELCOME, self.serverhandler.config.networkname, self.nickname)
         self.sendNumeric(RPL_YOURHOST, self.serverhandler.config.servername, self.serverhandler.config.servername, self.serverhandler.config.port, self.serverhandler.version)
-        self.sendNumeric(RPL_CREATED, strftime('on %a %-e %b %G at %H:%M:%S %Z', self.serverhandler.creationTime))
+        self.sendNumeric(RPL_CREATED, time.strftime('on %a %-e %b %G at %H:%M:%S %Z', self.serverhandler.creationTime))
         self.sendNumeric(RPL_MYINFO, self.serverhandler.config.servername, self.serverhandler.version)
         self.sendSupports()
         clientcount = len(self.serverhandler.clients)
@@ -369,7 +368,7 @@ class Channel:
         self.userModes = {'v':[], 'h':[], 'o':[owner], 'a':[]}
         self.members = []
         self.serverhandler = serverhandler
-        self.creationTime = int(time())
+        self.creationTime = int(time.time())
         serverhandler.channels.append(self)
 
     def getMode(self):
@@ -417,13 +416,14 @@ class ModuleWatcher(ProcessEvent):
         self.serverhandler = serverhandler
         self.shuttingDown = False
 
-        path, watchDescriptor = self.wm.add_watch('commands/', EventsCodes.ALL_FLAGS['IN_CREATE'] | EventsCodes.ALL_FLAGS['IN_DELETE']).items()[0]
+        flags = EventsCodes.ALL_FLAGS
+        path, watchDescriptor = self.wm.add_watch('commands/', flags['IN_CREATE'] | flags['IN_DELETE']).items()[0]
         self.watchDescriptorMap[path] = watchDescriptor
 
     def _watch_file(self, file_name, modulepath, module):
         """Add a watch for a specific file, and map said file to a module name"""
 
-        file_name = os_path.realpath(file_name)
+        file_name = os.path.realpath(file_name)
         self.moduleMap[file_name] = modulepath, module
         flags = EventsCodes.ALL_FLAGS
 
@@ -436,20 +436,20 @@ class ModuleWatcher(ProcessEvent):
     def watch_module(self, name):
         """Load a module, determine which files it uses, and watch them"""
 
-        if is_builtin(name) in [-1, 1]:
+        if imp.is_builtin(name) in [-1, 1]:
             # Pretty pointless to watch built-in modules
             return
 
-        f, pathname, description = find_module(name)
+        f, pathname, description = imp.find_module(name)
 
         try:
-            mod = load_module(name, f, pathname, description)
+            mod = imp.load_module(name, f, pathname, description)
             if f:
                 self._watch_file(f.name, name, mod)
             else:
-                for root, dirs, files in walk(pathname):
+                for root, dirs, files in os.walk(pathname):
                     for filename in files:
-                        fpath = os_path.join(root, filename)
+                        fpath = os.path.join(root, filename)
                         if fpath.endswith('.py'):
                             self._watch_file(fpath, name, mod)
         finally:
@@ -479,9 +479,9 @@ class ModuleWatcher(ProcessEvent):
         if event.name.endswith('.py'):
             self.watch_module('commands/' + event.name[:-3])
             modpath, modname = self.moduleMap[event.pathname]
-            f, pathname, description = find_module(modpath)
+            f, pathname, description = imp.find_module(modpath)
             try:
-                module = load_module(modpath, f, pathname, description)
+                module = imp.load_module(modpath, f, pathname, description)
                 print 'Loaded', event.pathname, 'which provides the following command(s): ' + ', '.join(module.getCommandNames())
                 for command in module.getCommandNames():
                     self.serverhandler.commandMap[command] = module
@@ -500,18 +500,18 @@ class ModuleWatcher(ProcessEvent):
             del self.moduleMap[event.pathname]
 
     def process_IN_IGNORED(self, event):
-        if not os_path.exists(event.path):
+        if not os.path.exists(event.path):
             return
         elif not self.shuttingDown:
             if event.path.endswith('.py'):
-                modname = os_path.relpath(event.path)[:-3]
+                modname = os.path.relpath(event.path)[:-3]
             elif event.path.endswith('.pyc'):
-                modname = os_path.relpath(event.path)[:-4]
+                modname = os.path.relpath(event.path)[:-4]
             else:
                 return
 
             try:
-                find_module(modname)
+                imp.find_module(modname)
             except ImportError as ie:
                 print 'While trying to load', modname + ', received this error:', ie
                 return
@@ -525,9 +525,9 @@ class ModuleWatcher(ProcessEvent):
         """A file has been changed"""
 
         modpath, modname = self.moduleMap[event.path]
-        f, pathname, description = find_module(modpath)
+        f, pathname, description = imp.find_module(modpath)
         try:
-            module = load_module(modpath, f, pathname, description)
+            module = imp.load_module(modpath, f, pathname, description)
             print 'Reloaded', event.path, 'which provides the following command(s): ' + ', '.join(module.getCommandNames())
             for command in module.getCommandNames():
                 self.serverhandler.commandMap[command] = module

@@ -1,38 +1,42 @@
+import select
+import signal
+import socket
+import sys
+
 from classes import ServerHandler
 from threading import Thread
-from select import select
-from signal import signal, SIGINT
-from socket import gethostname, socket, AF_INET, SOCK_STREAM
-from sys import excepthook, exit
 
 serverhandler = ServerHandler("config.json")
 
-oldexcepthook = excepthook
+oldexcepthook = sys.excepthook
 def newexcepthook(type, value, tb):
     serverhandler.sigint(type)
     oldexcepthook(type, value, tb)
-excepthook = newexcepthook
+sys.excepthook = newexcepthook
 
 def signal_handler(signal, frame):
     print ''
     serverhandler.sigint("SIGINT received.")
     serverhandler.run = False
-    exit(0)
-signal(SIGINT, signal_handler)
+    sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
 
-mainserversocket = socket(AF_INET, SOCK_STREAM)
-mainserversocket.bind((gethostname(), serverhandler.config.port))
+mainserversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+mainserversocket.bind((socket.gethostname(), serverhandler.config.port))
 mainserversocket.listen(1)
 serverhandler.addServerSocket(mainserversocket)
 host, port = mainserversocket.getsockname()
-print "Listening on " + host + ":" + str(port)
 
 if len(serverhandler.serverSockets) < 1:
     print "Not listening on any ports, quitting."
-    exit(0)
+    sys.exit(0)
+else:
+    print "Listening on " + host + ":" + str(port)
+
+serverhandler.moduleWatcher.start_watching()
 
 while serverhandler.run:
-    s = select(serverhandler.selectList, [], serverhandler.selectList, 1) # 1 as timeout so we can keep adding to the lists.
+    s = select.select(serverhandler.selectList, [], serverhandler.selectList, 1) # 1 as timeout so we can keep adding to the lists.
     if not serverhandler.run:
         break
 
