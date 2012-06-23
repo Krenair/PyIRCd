@@ -322,7 +322,7 @@ class Client:
 
         self.nickname = newname
 
-    def tryJoin(self, channel, key):
+    def tryJoin(self, channel, key): # TODO: Add support for +l and +b channel modes
         if 'i' in channel.modes and channel.name not in self.invitedTo:
             self.sendNumeric(ERR_INVITEONLYCHAN, channel.name)
         elif 'k' in channel.modes and key != channel.modes['k']:
