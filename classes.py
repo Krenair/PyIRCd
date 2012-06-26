@@ -7,7 +7,6 @@ import sys
 import time
 
 from numerics import ERR_UNKNOWNCOMMAND, RPL_TOPICWHOTIME, RPL_MOTDSTART, RPL_MOTD, RPL_ENDOFMOTD, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_TOPIC, ERR_INVITEONLYCHAN, ERR_BADCHANNELKEY, RPL_LUSERCLIENT, RPL_LUSEROP, RPL_LUSERCHANNELS, RPL_LUSERME, RPL_WELCOME, RPL_YOURHOST, RPL_CREATED, RPL_MYINFO, RPL_ISUPPORT, RPL_LOCALUSERS, RPL_GLOBALUSERS
-from pyinotify import ThreadedNotifier, EventsCodes, WatchManager, ProcessEvent
 from threading import Lock
 
 class Config:
@@ -29,7 +28,7 @@ class ServerHandler:
     def __init__(self, configPath):
         self.loadCommands()
         self.commandUsage = {}
-        for command in self.commandMap.keys():
+        for command in list(self.commandMap.keys()):
             self.commandUsage[command] = 0
 
         self.config = Config(configPath)
@@ -53,21 +52,29 @@ class ServerHandler:
         self.highestConnectionCount = 0
 
     def loadCommands(self):
-        self.moduleWatcher = ModuleWatcher(self)
         self.commandMap = {}
+        if 'pyinotify' in sys.modules:
+            self.moduleWatcher = ModuleWatcher(self)
 
         for importer, package_name, _ in pkgutil.iter_modules(["commands"]):
             modInfo = importer.find_module(package_name)
-            module = modInfo.load_module(package_name)
-            importer.find_module(package_name)
-            self.moduleWatcher.watch_module("commands/" + package_name)
+            try:
+                module = modInfo.load_module(package_name)
+            except ImportError as e:
+                print('Failed to load', modInfo.filename)
+                continue
+
+            if 'pyinotify' in sys.modules:
+                self.moduleWatcher.watch_module("commands/" + package_name)
+
             for command in module.getCommandNames():
                 self.commandMap[command] = module
 
     def sigint(self, message):
-        self.moduleWatcher.stop_watching()
+        if 'pyinotify' in sys.modules and self.moduleWatcher is not None and self.moduleWatcher.notifier.isAlive():
+            self.moduleWatcher.stop_watching()
 
-        for socket, client in dict(self.clients).items():
+        for socket, client in list(dict(self.clients).items()):
             client.writeLine("ERROR :Closing link: " + self.clients[socket].hostname + " (Server shutdown: " + message + ")")
             self.socketDisconnected(socket, "Server shutdown: " + message)
 
@@ -112,14 +119,14 @@ class ServerHandler:
         if stream in self.clients:
             client = self.clients[stream]
             self.outputLock.acquire()
-            print "Line from", str(client) + ":", line
+            print("Line from", str(client) + ":", line)
             self.outputLock.release()
             l = Line(line)
 
             if l.firstWord not in ['PING', 'PONG']:
                 client.lastActiveTime = int(time.time())
 
-            if l.firstWord not in self.commandMap.keys():
+            if l.firstWord not in list(self.commandMap.keys()):
                 client.sendNumeric(ERR_UNKNOWNCOMMAND, l.firstWord)
                 return
 
@@ -127,10 +134,10 @@ class ServerHandler:
 
             self.commandMap[l.firstWord].run(client, l, self)
         elif stream == sys.stdin:
-            print line
+            print(line)
     
     def socketDisconnected(self, socket, message = None):
-        if socket in self.clients.keys():
+        if socket in list(self.clients.keys()):
             client = self.clients[socket]
             clientsToNotify = []
             for channel in client.channels:
@@ -148,7 +155,7 @@ class ServerHandler:
             self.remoteSockets.remove(socket)
         if socket in self.readingFromSockets:
             self.readingFromSockets.remove(socket)
-        if socket in self.clients.keys():
+        if socket in list(self.clients.keys()):
             del self.clients[socket]
         socket.close()
     
@@ -162,7 +169,7 @@ class ServerHandler:
                 return channel
 
     def getClient(self, name):
-        for client in self.clients.values():
+        for client in list(self.clients.values()):
             if client.nickname == name:
                 return client
 
@@ -269,11 +276,12 @@ class Client:
     def writeLine(self, line):
         self.socket.send(line + "\r\n")
         self.serverhandler.outputLock.acquire()
-        print "Line to", str(self) + ":", line
+        print("Line to", str(self) + ":", line)
         self.serverhandler.outputLock.release()
 
-    def sendNumeric(self, (number, format), *args):
+    def sendNumeric(self, numeric, *args):
         if self.loggedIn:
+            number, format = numeric
             self.writeLine(":" + self.serverhandler.config.servername + " " + number + " " + self.nickname + " " + (format % args))
 
     def login(self):
@@ -287,7 +295,7 @@ class Client:
         self.sendNumeric(RPL_LUSERCLIENT, clientcount, 0, 1) # 0 invisible users, 1 server
 
         opers = 0
-        for client in self.serverhandler.clients.values():
+        for client in list(self.serverhandler.clients.values()):
             if 'o' in client.modes:
                 opers += 1
 
@@ -384,7 +392,7 @@ class Channel:
     def memberLeave(self, member):
         self.members.remove(member)
         member.channels.remove(self)
-        for modeGroup in self.userModes.values():
+        for modeGroup in list(self.userModes.values()):
             if member in modeGroup:
                 modeGroup.remove(member)
 
@@ -405,132 +413,137 @@ class ModeChange:
 # The following class is based on https://gist.github.com/1013122
 # Watch for any changes in a module or package, and reload it automatically
 
-class ModuleWatcher(ProcessEvent):
-    """Automatically reload any modules or packages as they change"""
+try:
+    from pyinotify import ThreadedNotifier, EventsCodes, WatchManager, ProcessEvent
+    class ModuleWatcher(ProcessEvent):
+        """Automatically reload any modules or packages as they change"""
 
-    def __init__(self, serverhandler):
-        self.wm = WatchManager()
-        self.notifier = ThreadedNotifier(self.wm, self)
-        self.moduleMap = {}
-        self.watchDescriptorMap = {}
-        self.serverhandler = serverhandler
-        self.shuttingDown = False
+        def __init__(self, serverhandler):
+            self.wm = WatchManager()
+            self.notifier = ThreadedNotifier(self.wm, self)
+            self.moduleMap = {}
+            self.watchDescriptorMap = {}
+            self.serverhandler = serverhandler
+            self.shuttingDown = False
 
-        flags = EventsCodes.ALL_FLAGS
-        path, watchDescriptor = self.wm.add_watch('commands/', flags['IN_CREATE'] | flags['IN_DELETE']).items()[0]
-        self.watchDescriptorMap[path] = watchDescriptor
+            flags = EventsCodes.ALL_FLAGS
+            path, watchDescriptor = list(self.wm.add_watch('commands/', flags['IN_CREATE'] | flags['IN_DELETE']).items())[0]
+            self.watchDescriptorMap[path] = watchDescriptor
 
-    def _watch_file(self, file_name, modulepath, module):
-        """Add a watch for a specific file, and map said file to a module name"""
+        def _watch_file(self, file_name, modulepath, module):
+            """Add a watch for a specific file, and map said file to a module name"""
 
-        file_name = os.path.realpath(file_name)
-        self.moduleMap[file_name] = modulepath, module
-        flags = EventsCodes.ALL_FLAGS
+            file_name = os.path.realpath(file_name)
+            self.moduleMap[file_name] = modulepath, module
+            flags = EventsCodes.ALL_FLAGS
 
-        a = self.wm.add_watch(file_name, flags['IN_MODIFY'])
-        if a == {}:
-            return
-        path, watchDescriptor = a.items()[0]
-        self.watchDescriptorMap[path] = watchDescriptor
+            a = self.wm.add_watch(file_name, flags['IN_MODIFY'])
+            if a == {}:
+                return
+            path, watchDescriptor = list(a.items())[0]
+            self.watchDescriptorMap[path] = watchDescriptor
 
-    def watch_module(self, name):
-        """Load a module, determine which files it uses, and watch them"""
+        def watch_module(self, name):
+            """Load a module, determine which files it uses, and watch them"""
 
-        if imp.is_builtin(name) in [-1, 1]:
-            # Pretty pointless to watch built-in modules
-            return
+            if imp.is_builtin(name) in [-1, 1]:
+                # Pretty pointless to watch built-in modules
+                return
 
-        f, pathname, description = imp.find_module(name)
+            f, pathname, description = imp.find_module(name)
 
-        try:
-            mod = imp.load_module(name, f, pathname, description)
-            if f:
-                self._watch_file(f.name, name, mod)
+            try:
+                mod = imp.load_module(name, f, pathname, description)
+                if f:
+                    self._watch_file(f.name, name, mod)
+                else:
+                    for root, dirs, files in os.walk(pathname):
+                        for filename in files:
+                            fpath = os.path.join(root, filename)
+                            if fpath.endswith('.py'):
+                                self._watch_file(fpath, name, mod)
+            finally:
+                if f:
+                    f.close()
+
+        def start_watching(self):
+            """Start the pyinotify watch thread"""
+            if self.notifier is not None:
+                self.notifier.start()
+
+        def stop_watching(self):
+            """Stop the pyinotify watch thread"""
+            self.shuttingDown = True
+
+            if self.notifier is not None:
+                self.notifier.stop()
+
+        def process_default(self, event):
+            if event.maskname == 'IN_IGNORED': # TODO: Watch IN_IGNORED properly.
+                self.process_IN_IGNORED(event)
             else:
-                for root, dirs, files in os.walk(pathname):
-                    for filename in files:
-                        fpath = os.path.join(root, filename)
-                        if fpath.endswith('.py'):
-                            self._watch_file(fpath, name, mod)
-        finally:
-            if f:
-                f.close()
+                print(event)
 
-    def start_watching(self):
-        """Start the pyinotify watch thread"""
-        if self.notifier is not None:
-            self.notifier.start()
+        def process_IN_CREATE(self, event):
+            """A file has been created."""
+            if event.name.endswith('.py'):
+                self.watch_module('commands/' + event.name[:-3])
+                modpath, modname = self.moduleMap[event.pathname]
+                f, pathname, description = imp.find_module(modpath)
+                try:
+                    module = imp.load_module(modpath, f, pathname, description)
+                    print('Loaded', event.pathname, 'which provides the following command(s): ' + ', '.join(module.getCommandNames()))
+                    for command in module.getCommandNames():
+                        self.serverhandler.commandMap[command] = module
+                finally:
+                    if f:
+                        f.close()
 
-    def stop_watching(self):
-        """Stop the pyinotify watch thread"""
-        self.shuttingDown = True
+        def process_IN_DELETE(self, event):
+            """A file has been deleted."""
+            if (event.name.endswith('.py') or event.name.endswith('.pyc')) and event.pathname in self.moduleMap:
+                commands = self.moduleMap[event.pathname][1].getCommandNames()
+                print('Unloaded', event.name, 'which provided the following command(s): ' + ', '.join(commands))
+                del self.watchDescriptorMap[event.pathname]
+                for command in commands:
+                    del self.serverhandler.commandMap[command]
+                del self.moduleMap[event.pathname]
 
-        if self.notifier is not None:
-            self.notifier.stop()
+        def process_IN_IGNORED(self, event):
+            if not os.path.exists(event.path):
+                return
+            elif not self.shuttingDown:
+                if event.path.endswith('.py'):
+                    modname = os.path.relpath(event.path)[:-3]
+                elif event.path.endswith('.pyc'):
+                    modname = os.path.relpath(event.path)[:-4]
+                else:
+                    return
 
-    def process_default(self, event):
-        if event.maskname == 'IN_IGNORED': # TODO: Watch IN_IGNORED properly.
-            self.process_IN_IGNORED(event)
-        else:
-            print event
+                try:
+                    imp.find_module(modname)
+                except ImportError as ie:
+                    print('While trying to load', modname + ', received this error:', ie)
+                    return
 
-    def process_IN_CREATE(self, event):
-        """A file has been created."""
-        if event.name.endswith('.py'):
-            self.watch_module('commands/' + event.name[:-3])
-            modpath, modname = self.moduleMap[event.pathname]
+                self.process_IN_MODIFY(event)
+                del self.watchDescriptorMap[event.path]
+                del self.moduleMap[event.path]
+                self.watch_module(modname)
+
+        def process_IN_MODIFY(self, event):
+            """A file has been changed"""
+
+            modpath, modname = self.moduleMap[event.path]
             f, pathname, description = imp.find_module(modpath)
             try:
                 module = imp.load_module(modpath, f, pathname, description)
-                print 'Loaded', event.pathname, 'which provides the following command(s): ' + ', '.join(module.getCommandNames())
+                print('Reloaded', event.path, 'which provides the following command(s): ' + ', '.join(module.getCommandNames()))
                 for command in module.getCommandNames():
                     self.serverhandler.commandMap[command] = module
             finally:
                 if f:
                     f.close()
-
-    def process_IN_DELETE(self, event):
-        """A file has been deleted."""
-        if (event.name.endswith('.py') or event.name.endswith('.pyc')) and event.pathname in self.moduleMap:
-            commands = self.moduleMap[event.pathname][1].getCommandNames()
-            print 'Unloaded', event.name, 'which provided the following command(s): ' + ', '.join(commands)
-            del self.watchDescriptorMap[event.pathname]
-            for command in commands:
-                del self.serverhandler.commandMap[command]
-            del self.moduleMap[event.pathname]
-
-    def process_IN_IGNORED(self, event):
-        if not os.path.exists(event.path):
-            return
-        elif not self.shuttingDown:
-            if event.path.endswith('.py'):
-                modname = os.path.relpath(event.path)[:-3]
-            elif event.path.endswith('.pyc'):
-                modname = os.path.relpath(event.path)[:-4]
-            else:
-                return
-
-            try:
-                imp.find_module(modname)
-            except ImportError as ie:
-                print 'While trying to load', modname + ', received this error:', ie
-                return
-
-            self.process_IN_MODIFY(event)
-            del self.watchDescriptorMap[event.path]
-            del self.moduleMap[event.path]
-            self.watch_module(modname)
-
-    def process_IN_MODIFY(self, event):
-        """A file has been changed"""
-
-        modpath, modname = self.moduleMap[event.path]
-        f, pathname, description = imp.find_module(modpath)
-        try:
-            module = imp.load_module(modpath, f, pathname, description)
-            print 'Reloaded', event.path, 'which provides the following command(s): ' + ', '.join(module.getCommandNames())
-            for command in module.getCommandNames():
-                self.serverhandler.commandMap[command] = module
-        finally:
-            if f:
-                f.close()
+except ImportError as e:
+    if str(e) == 'No module named pyinotify':
+        print('No Pyinotify!')

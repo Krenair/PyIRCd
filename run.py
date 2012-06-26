@@ -15,7 +15,7 @@ def newexcepthook(type, value, tb):
 sys.excepthook = newexcepthook
 
 def signal_handler(signal, frame):
-    print ''
+    print('')
     serverhandler.sigint("SIGINT received.")
     serverhandler.run = False
     sys.exit(0)
@@ -28,12 +28,13 @@ serverhandler.addServerSocket(mainserversocket)
 host, port = mainserversocket.getsockname()
 
 if len(serverhandler.serverSockets) < 1:
-    print "Not listening on any ports, quitting."
+    print("Not listening on any ports, quitting.")
     sys.exit(0)
 else:
-    print "Listening on " + host + ":" + str(port)
+    print("Listening on " + host + ":" + str(port))
 
-serverhandler.moduleWatcher.start_watching()
+if 'pyinotify' in sys.modules:
+    serverhandler.moduleWatcher.start_watching()
 
 while serverhandler.run:
     s = select.select(serverhandler.selectList, [], serverhandler.selectList, 1) # 1 as timeout so we can keep adding to the lists.

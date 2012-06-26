@@ -9,7 +9,7 @@ def getCommandNames():
 def run(client, line, serverhandler):
     query = line.readWord()
     if query == 'm': # Returns a list of commands supported by the server and the usage count for each if the usage count is non zero;
-        for commandName, usageCount in serverhandler.commandUsage.items():
+        for commandName, usageCount in list(serverhandler.commandUsage.items()):
             client.sendNumeric(RPL_STATSCOMMANDS, commandName, usageCount)
     elif query == 'u': # Returns a string showing how long the server has been up.
         client.sendNumeric(RPL_STATSUPTIME, str(datetime.timedelta(seconds=time.mktime(time.localtime()) - time.mktime(serverhandler.startTime))))

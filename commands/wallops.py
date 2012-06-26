@@ -8,6 +8,6 @@ def run(client, line, serverhandler):
         client.sendNumeric(ERR_NEEDMOREPARAMS, 'WALLOPS')
     else:
         message = line.readToEnd()[1:]
-        for c in serverhandler.clients.values():
+        for c in list(serverhandler.clients.values()):
             if 'o' in c.modes:
                 c.writeLine(":" + str(client) + " WALLOPS :" + message)
