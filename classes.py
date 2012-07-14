@@ -119,7 +119,7 @@ class ServerHandler:
         if stream in self.clients:
             client = self.clients[stream]
             self.outputLock.acquire()
-            print("Line from", str(client) + ":", line)
+            print("Line from " + str(client) + ": " + line)
             self.outputLock.release()
             l = Line(line)
 
@@ -276,7 +276,7 @@ class Client:
     def writeLine(self, line):
         self.socket.send(line + "\r\n")
         self.serverhandler.outputLock.acquire()
-        print("Line to", str(self) + ":", line)
+        print("Line to " + str(self) + ": " + line)
         self.serverhandler.outputLock.release()
 
     def sendNumeric(self, numeric, *args):
@@ -492,7 +492,7 @@ try:
                 f, pathname, description = imp.find_module(modpath)
                 try:
                     module = imp.load_module(modpath, f, pathname, description)
-                    print('Loaded', event.pathname, 'which provides the following command(s): ' + ', '.join(module.getCommandNames()))
+                    print('Loaded ' + event.pathname + ' which provides the following command(s): ' + ', '.join(module.getCommandNames()))
                     for command in module.getCommandNames():
                         self.serverhandler.commandMap[command] = module
                 finally:
@@ -503,7 +503,7 @@ try:
             """A file has been deleted."""
             if (event.name.endswith('.py') or event.name.endswith('.pyc')) and event.pathname in self.moduleMap:
                 commands = self.moduleMap[event.pathname][1].getCommandNames()
-                print('Unloaded', event.name, 'which provided the following command(s): ' + ', '.join(commands))
+                print('Unloaded ' + event.name + ' which provided the following command(s): ' + ', '.join(commands))
                 del self.watchDescriptorMap[event.pathname]
                 for command in commands:
                     del self.serverhandler.commandMap[command]
@@ -523,7 +523,7 @@ try:
                 try:
                     imp.find_module(modname)
                 except ImportError as ie:
-                    print('While trying to load', modname + ', received this error:', ie)
+                    print('While trying to load ' + modname + ', received this error: ' + ie)
                     return
 
                 self.process_IN_MODIFY(event)
@@ -538,7 +538,7 @@ try:
             f, pathname, description = imp.find_module(modpath)
             try:
                 module = imp.load_module(modpath, f, pathname, description)
-                print('Reloaded', event.path, 'which provides the following command(s): ' + ', '.join(module.getCommandNames()))
+                print('Reloaded ' + event.path + ' which provides the following command(s): ' + ', '.join(module.getCommandNames()))
                 for command in module.getCommandNames():
                     self.serverhandler.commandMap[command] = module
             finally:
