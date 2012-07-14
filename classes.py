@@ -70,7 +70,7 @@ class ServerHandler:
             for command in module.getCommandNames():
                 self.commandMap[command] = module
 
-    def sigint(self, message):
+    def shutdown(self, message):
         if 'pyinotify' in sys.modules and self.moduleWatcher is not None and self.moduleWatcher.notifier.isAlive():
             self.moduleWatcher.stop_watching()
 

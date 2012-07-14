@@ -14,12 +14,16 @@ def newexcepthook(type, value, tb):
     oldexcepthook(type, value, tb)
 sys.excepthook = newexcepthook
 
-def signal_handler(signal, frame):
+def signal_handler(sig, frame):
     print('')
-    serverhandler.sigint("SIGINT received.")
+    if sig == signal.SIGINT:
+        serverhandler.shutdown("SIGINT received.")
+    elif sig == signal.SIGTERM:
+        serverhandler.shutdown("SIGTERM received.")
     serverhandler.run = False
     sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 mainserversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 mainserversocket.bind((socket.gethostname(), serverhandler.config.port))
