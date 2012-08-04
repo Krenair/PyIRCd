@@ -1,8 +1,4 @@
-import select
-import signal
-import socket
-import sys
-
+import select, signal, socket, sys
 from classes import ServerHandler
 from threading import Thread
 
@@ -10,7 +6,7 @@ serverhandler = ServerHandler("config.json")
 
 oldexcepthook = sys.excepthook
 def newexcepthook(type, value, tb):
-    serverhandler.sigint(type)
+    serverhandler.shutdown(type)
     oldexcepthook(type, value, tb)
 sys.excepthook = newexcepthook
 
@@ -45,7 +41,7 @@ while serverhandler.run:
     if not serverhandler.run:
         break
 
-    for stream in s[0]: # Reads.
+    for stream in s[0]: # Reads/connects.
         if stream in serverhandler.serverSockets: # Server socket returned - this must mean that here is an incoming connection.
             Thread(target=serverhandler.acceptConnection, args=[stream]).start()
         elif stream not in serverhandler.readingFromSockets: # This must mean there is a line to be read and processed.

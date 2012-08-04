@@ -1,7 +1,5 @@
-import datetime
-import time
-
-from numerics import RPL_STATSCOMMANDS, RPL_STATSUPTIME, RPL_STATSCONN, RPL_ENDOFSTATS #, RPL_STATSLLINE, RPL_STATSOLINE
+import datetime, time
+from numerics import *
 
 def getCommandNames():
     return ['STATS']

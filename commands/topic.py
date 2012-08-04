@@ -1,4 +1,4 @@
-from numerics import ERR_NOSUCHCHANNEL, ERR_NOTONCHANNEL, ERR_CHANOPRIVSNEEDED, RPL_NOTOPIC, RPL_TOPIC, RPL_TOPICWHOTIME
+from numerics import *
 
 def getCommandNames():
     return ['TOPIC']

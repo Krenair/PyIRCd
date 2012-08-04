@@ -1,4 +1,4 @@
-from numerics import ERR_NOSUCHNICK, ERR_NOTONCHANNEL, ERR_CHANOPRIVSNEEDED, ERR_USERONCHANNEL, RPL_AWAY, RPL_INVITING
+from numerics import *
 
 def getCommandNames():
     return ['INVITE']

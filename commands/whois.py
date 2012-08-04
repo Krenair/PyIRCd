@@ -1,6 +1,5 @@
 import time
-
-from numerics import ERR_NOSUCHNICK, RPL_WHOISUSER, RPL_WHOISCHANNELS, RPL_WHOISSERVER, RPL_WHOISSECURE, RPL_AWAY, RPL_WHOISOPERATOR, RPL_WHOISIDLE, RPL_ENDOFWHOIS
+from numerics import *
 
 def getCommandNames():
     return ['WHOIS']

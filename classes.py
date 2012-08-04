@@ -1,12 +1,5 @@
-import commands
-import imp
-import json
-import os
-import pkgutil
-import sys
-import time
-
-from numerics import ERR_UNKNOWNCOMMAND, RPL_TOPICWHOTIME, RPL_MOTDSTART, RPL_MOTD, RPL_ENDOFMOTD, RPL_NAMREPLY, RPL_ENDOFNAMES, RPL_TOPIC, ERR_INVITEONLYCHAN, ERR_BADCHANNELKEY, RPL_LUSERCLIENT, RPL_LUSEROP, RPL_LUSERCHANNELS, RPL_LUSERME, RPL_WELCOME, RPL_YOURHOST, RPL_CREATED, RPL_MYINFO, RPL_ISUPPORT, RPL_LOCALUSERS, RPL_GLOBALUSERS
+import commands, imp, json, os, pkgutil, sys, time
+from numerics import *
 from threading import Lock
 
 class Config:
@@ -102,7 +95,7 @@ class ServerHandler:
             try:
                 line = ""
                 while True:
-                    line += stream.recv(1)
+                    line += stream.recv(1).decode('UTF-8')
                     if len(line) >= 2 and line[-2:] == "\r\n":
                         line = line[:-2]
                         break
@@ -139,6 +132,10 @@ class ServerHandler:
     def socketDisconnected(self, socket, message = None):
         if socket in list(self.clients.keys()):
             client = self.clients[socket]
+            if message is not None:
+                print(str(client) + " disconnected: " + message)
+            else:
+                print(str(client) + " disconnected")
             clientsToNotify = []
             for channel in client.channels:
                 for member in channel.members:
@@ -274,7 +271,11 @@ class Client:
         return self.nickname + "!" + self.username + "@" + self.remotehost
 
     def writeLine(self, line):
-        self.socket.send(line + "\r\n")
+        if sys.version_info.major == 3:
+            self.socket.send(bytes(line + '\r\n', 'UTF-8'))
+        else:
+            self.socket.send(line + '\r\n')
+
         self.serverhandler.outputLock.acquire()
         print("Line to " + str(self) + ": " + line)
         self.serverhandler.outputLock.release()

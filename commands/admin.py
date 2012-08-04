@@ -1,4 +1,4 @@
-from numerics import RPL_ADMINME, RPL_ADMINLOC1, RPL_ADMINLOC2, RPL_ADMINEMAIL
+from numerics import *
 
 def getCommandNames():
     return ['ADMIN']

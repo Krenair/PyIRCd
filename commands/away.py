@@ -1,4 +1,4 @@
-from numerics import RPL_NOWAWAY, RPL_UNAWAY
+from numerics import *
 
 def getCommandNames():
     return ['AWAY']

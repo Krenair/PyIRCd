@@ -1,4 +1,4 @@
-from numerics import ERR_NOSUCHCHANNEL, ERR_NOSUCHNICK, ERR_USERNOTINCHANNEL, ERR_NOTONCHANNEL, ERR_CHANOPRIVSNEEDED
+from numerics import *
 
 def getCommandNames():
     return ['KICK']
