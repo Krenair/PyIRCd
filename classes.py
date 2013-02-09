@@ -282,8 +282,12 @@ class Client:
 
     def sendNumeric(self, numeric, *args):
         if self.loggedIn:
-            number, format = numeric
-            self.writeLine(":" + self.serverhandler.config.servername + " " + number + " " + self.nickname + " " + (format % args))
+            nickname = self.nickname
+        else:
+            nickname = '*'
+
+        number, format = numeric
+        self.writeLine(":" + self.serverhandler.config.servername + " " + number + " " + nickname + " " + (format % args))
 
     def login(self):
         self.loggedIn = True
