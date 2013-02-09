@@ -15,9 +15,6 @@ def run(client, line, serverhandler):
         client.sendNumeric(ERR_NOTREGISTERED)
         return
 
-    if keys is not None and len(channels) != len(keys):
-        pass # TODO: Error properly.
-
     for index in range(0, len(channels)):
         channelName = channels[index]
         if keys is None:
@@ -27,8 +24,6 @@ def run(client, line, serverhandler):
 
         channel = serverhandler.getChannel(channelName)
         if channel is None:
-            # This channel doesn't exist already, create it.
-            channel = Channel(channelName, client, serverhandler)
-            client.tryJoin(channel, None)
-        else:
-            client.tryJoin(channel, key)
+            channel = Channel(channelName, client, serverhandler) # This channel doesn't exist already, create it.
+
+        client.tryJoin(channel, key)
