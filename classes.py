@@ -370,6 +370,9 @@ class Client:
                 if channel.topicLastChangedAt is not None: # If it's not been changed before...
                     self.sendNumeric(RPL_TOPICWHOTIME, channel.name, channel.topicLastChangedBy, channel.topicLastChangedAt)
 
+    def isAway(self):
+        return self.awayMessage != None
+
 class Channel:
     def __init__(self, name, owner, serverhandler):
         self.name = name

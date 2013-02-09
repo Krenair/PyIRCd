@@ -15,7 +15,10 @@ def run(client, line, serverhandler):
         return
 
     for channelMember in channel.members:
-        flags = "H" #TODO: Work out why this should be G in some situations.
+        if channelMember.isAway():
+            flags = "G"
+        else:
+            flags = "H"
 
         if channelMember in channel.userModes['v']:
             flags += '+'
