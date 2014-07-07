@@ -271,10 +271,10 @@ class Client:
         return self.nickname + "!" + self.username + "@" + self.remotehost
 
     def writeLine(self, line):
+        text = line + '\r\n'
         if sys.version_info.major == 3:
-            self.socket.send(bytes(line + '\r\n', 'UTF-8'))
-        else:
-            self.socket.send(line + '\r\n')
+            text = bytes(text, 'UTF-8')
+        self.socket.send(text)
 
         self.serverhandler.outputLock.acquire()
         print("Line to " + str(self) + ": " + line)
@@ -417,6 +417,12 @@ class ModeChange:
         self.mode = mode
         self.given = given
         self.nick = nick
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    def __str__(self):
+        return str(self.__dict__)
 
 # The following class is based on https://gist.github.com/1013122
 # Watch for any changes in a module or package, and reload it automatically

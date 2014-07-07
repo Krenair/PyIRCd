@@ -16,7 +16,8 @@ def run(client, line, serverhandler):
                 client.sendNumeric(ERR_CANNOTSENDTOCHAN, receiver)
             else:
                 for member in channel.members:
-                    member.writeLine(":" + str(client) + " " + line.firstWord + " " + receiver + " :" + text)
+                    if member != client:
+                        member.writeLine(":" + str(client) + " " + line.firstWord + " " + receiver + " :" + text)
         else:
             receiverClient = serverhandler.getClient(receiver)
             if receiverClient is None:
